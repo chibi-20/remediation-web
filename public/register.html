@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <title>Register Student</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background-color: #e3f2fd;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .register-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 450px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #1565c0;
+      margin-bottom: 1rem;
+      font-size: 22px;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.3rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 0.6rem;
+      background-color: #1976d2;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button:hover {
+      background-color: #0d47a1;
+    }
+
+    .link {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .link a {
+      color: #1565c0;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .success {
+      color: green;
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 14px;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 14px;
+    }
+
+    @media (max-width: 480px) {
+      .register-container {
+        padding: 1.5rem;
+        border-radius: 8px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      label {
+        font-size: 13px;
+      }
+
+      input, select {
+        font-size: 13px;
+      }
+
+      button {
+        font-size: 14px;
+        padding: 10px;
+      }
+
+      .link a {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="register-container">
+    <h2>Create Student Account</h2>
+    <form id="registerForm">
+      <label for="lastName">Last Name</label>
+      <input type="text" id="lastName" required>
+
+      <label for="firstName">First Name</label>
+      <input type="text" id="firstName" required>
+
+      <label for="middleInitial">Middle Initial</label>
+      <input type="text" id="middleInitial" maxlength="1">
+
+      <label for="grade">Grade</label>
+      <input type="text" id="grade" required>
+
+      <label for="section">Section</label>
+      <input type="text" id="section" required>
+
+      <label for="admin">Teacher</label>
+      <select id="admin" name="adminId" required>
+        <option value="">-- Select Teacher --</option>
+      </select>
+
+      <label for="lrn">LRN</label>
+      <input type="text" id="lrn" required>
+
+      <button type="submit">Register</button>
+    </form>
+
+    <div id="message" class=""></div>
+
+    <div class="link">
+      <a href="login.html">← Back to Login</a>
+    </div>
+  </div>
+
+  <script>
+    // Load all registered teachers into the dropdown
+    fetch('/api/admins')
+      .then(res => res.json())
+      .then(admins => {
+        const adminSelect = document.getElementById('admin');
+        admins.forEach(admin => {
+          const option = document.createElement('option');
+          option.value = admin.id;
+          option.textContent = admin.username;
+          adminSelect.appendChild(option);
+        });
+      })
+      .catch(err => {
+        console.error('Failed to load admins:', err);
+        alert("❌ Failed to load teachers. Try again later.");
+      });
+
+    // Handle student registration form
+    document.getElementById('registerForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const data = {
+        lastName: document.getElementById('lastName').value.trim(),
+        firstName: document.getElementById('firstName').value.trim(),
+        middleInitial: document.getElementById('middleInitial').value.trim(),
+        grade: document.getElementById('grade').value.trim(),
+        section: document.getElementById('section').value.trim(),
+        lrn: document.getElementById('lrn').value.trim(),
+        adminId: document.getElementById('admin').value
+      };
+
+      const msg = document.getElementById('message');
+      msg.className = '';
+      msg.textContent = '';
+
+      try {
+        const res = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          msg.textContent = '✅ Student registered successfully!';
+          msg.className = 'success';
+          document.getElementById('registerForm').reset();
+        } else {
+          msg.textContent = result.error || '❌ Registration failed.';
+          msg.className = 'error';
+        }
+      } catch (err) {
+        console.error('Registration error:', err);
+        msg.textContent = '❌ Server error.';
+        msg.className = 'error';
+      }
+    });
+  </script>
+</body>
+</html>

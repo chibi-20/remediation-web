@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background-color: #e3f2fd;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .login-container {
+      max-width: 400px;
+      margin: 5rem auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    h2 {
+      color: #1565c0;
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 1.2rem;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #1565c0;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0d47a1;
+    }
+
+    .link-group {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .link-btn {
+      color: #1565c0;
+      text-decoration: none;
+      font-weight: bold;
+      flex: 1 1 45%;
+      text-align: center;
+      background: #e3f2fd;
+      padding: 10px;
+      border-radius: 6px;
+      transition: background-color 0.3s;
+    }
+
+    .link-btn:hover {
+      background-color: #bbdefb;
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        margin: 2rem 1rem;
+        padding: 1.5rem;
+      }
+
+      .link-group {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .link-btn {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Student Login</h2>
+    <label for="lrn">LRN:</label>
+    <input type="text" id="lrn" placeholder="Enter your LRN">
+    <button onclick="loginStudent()">Log In</button>
+
+    <div class="link-group">
+      <a href="register.html" class="link-btn">Create Account</a>
+      <a href="admin-login.html" class="link-btn">Admin Login</a>
+    </div>
+  </div>
+
+  <script>
+    function loginStudent() {
+      const lrn = document.getElementById("lrn").value.trim();
+      if (!lrn) {
+        alert("Please enter your LRN.");
+        return;
+      }
+      localStorage.setItem("studentLRN", lrn);
+      window.location.href = "dashboard.html";
+    }
+  </script>
+</body>
+</html>

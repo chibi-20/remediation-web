@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background-color: #e3f2fd;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .login-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      width: 350px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #1565c0;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-top: 0.5rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.6rem;
+      margin-top: 1.5rem;
+      background-color: #1976d2;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0d47a1;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      text-decoration: none;
+      color: #1565c0;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>🔐 Admin Login</h2>
+    <form id="adminLoginForm">
+      <label for="username">Username:</label>
+      <input type="text" id="username" required>
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" required>
+
+      <button type="submit">Log In</button>
+    </form>
+    <div id="error" class="error"></div>
+
+    <a href="login.html" class="back-link">⬅ Balik sa Student Login</a>
+    <a href="admin-register.html" class="back-link">🆕 Create an Admin Account</a>
+  </div>
+
+  <script>
+    document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const errorDiv = document.getElementById("error");
+
+  try {
+    const response = await fetch("/admin-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      localStorage.setItem("isAdmin", "true");
+      window.location.href = "admin.html";
+    } else {
+      errorDiv.textContent = "❌ " + result.error;
+    }
+  } catch (err) {
+    errorDiv.textContent = "❌ Server error. Please try again.";
+  }
+});
+  </script>
+</body>
+</html>

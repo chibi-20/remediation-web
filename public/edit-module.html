@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Edit Module</title>
+  <link rel="stylesheet" href="css/style.css" />
+ <style>
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: linear-gradient(to right, #e3f2fd, #bbdefb);
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    padding: 2rem;
+    overflow-y: auto;
+  }
+
+  main {
+    width: 100%;
+    max-width: 1000px;
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  h2 {
+    text-align: center;
+    color: #1565c0;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  h3 {
+    color: #0d47a1;
+    margin-top: 2rem;
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.3rem;
+    color: #333;
+  }
+
+  select,
+  input[type="file"],
+  input[type="text"] {
+    width: 100%;
+    padding: 0.7rem;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+  }
+
+  .question-block {
+    background-color: #e3f2fd;
+    border: 2px solid #90caf9;
+    border-radius: 14px;
+    padding: 1rem 1.5rem;
+    margin-top: 1.5rem;
+    position: relative;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  }
+
+  .delete-question {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ef5350;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .delete-question:hover {
+    background-color: #c62828;
+  }
+
+  .choice-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.6rem;
+    gap: 0.5rem;
+  }
+
+  .choice-row input[type="radio"] {
+    margin-right: 6px;
+  }
+
+  .choice-row input[type="text"] {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+  }
+
+  .choice-row button {
+    background: #e53935;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .choice-row button:hover {
+    background-color: #b71c1c;
+  }
+
+  .add-choice-btn {
+    margin-top: 0.5rem;
+    background-color: #42a5f5;
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+
+  .add-choice-btn:hover {
+    background-color: #1e88e5;
+  }
+
+  #addQuestionBtn,
+  #saveChangesBtn {
+    background-color: #1565c0;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    margin-top: 2rem;
+    margin-right: 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background 0.3s ease;
+  }
+
+  #addQuestionBtn:hover,
+  #saveChangesBtn:hover {
+    background-color: #0d47a1;
+  }
+
+  #saveChangesBtn {
+    background-color: #2e7d32;
+  }
+
+  #saveChangesBtn:hover {
+    background-color: #1b5e20;
+  }
+
+  @media (max-width: 768px) {
+    main {
+      padding: 1rem;
+    }
+
+    .choice-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .choice-row input[type="text"] {
+      width: 100%;
+    }
+  }
+</style>
+
+  </style>
+</head>
+<body>
+  <main>
+    <h2>✏️ Edit Module</h2>
+    <form id="editModuleForm" enctype="multipart/form-data">
+      <label for="quarter">Quarter</label>
+      <select id="quarter" name="quarter">
+        <option value="Q1">Quarter 1</option>
+        <option value="Q2">Quarter 2</option>
+        <option value="Q3">Quarter 3</option>
+        <option value="Q4">Quarter 4</option>
+      </select>
+
+      <label for="pdf">Replace PDF (optional)</label>
+      <input type="file" id="pdf" name="pdf" accept=".pdf" />
+
+      <h3 style="margin-top: 2rem;">Quiz Questions</h3>
+      <div id="questionsContainer"></div>
+
+      <button type="button" id="addQuestionBtn">➕ Add Question</button>
+      <button type="submit" id="saveChangesBtn">💾 Save Changes</button>
+    </form>
+  </main>
+
+  <script>
+    const moduleId = new URLSearchParams(window.location.search).get("id");
+    const questionsContainer = document.getElementById("questionsContainer");
+
+    async function loadModule() {
+      const res = await fetch("/api/modules");
+      const modules = await res.json();
+      const module = modules.find(m => m.id == moduleId);
+      if (!module) return alert("Module not found.");
+
+      document.getElementById("quarter").value = module.quarter;
+      module.questions.forEach((q, index) => addQuestionBlock(q, index));
+    }
+
+    function addQuestionBlock(q = {}, index = Date.now()) {
+      const block = document.createElement("div");
+      block.className = "question-block";
+
+      const choicesHTML = (q.choices || ["", "", "", ""]).map((choice, i) => `
+        <div class="choice-row">
+          <input type="radio" name="correct-${index}" ${q.answer === choice ? "checked" : ""}>
+          <input type="text" name="choice" value="${choice}">
+          <button type="button" onclick="this.parentElement.remove()">🗑</button>
+        </div>
+      `).join("");
+
+      block.innerHTML = `
+        <button class="delete-question" onclick="this.parentElement.remove()">🗑 Delete Question</button>
+        <label>Question:</label>
+        <input type="text" name="question" value="${q.question || ""}">
+        <div class="choices-container">
+          <label>Choices:</label>
+          ${choicesHTML}
+        </div>
+        <button type="button" class="add-choice-btn" onclick="addChoice(this, '${index}')">➕ Add Choice</button>
+      `;
+
+      questionsContainer.appendChild(block);
+    }
+
+    function addChoice(button, groupName) {
+      const container = button.previousElementSibling;
+      const row = document.createElement("div");
+      row.className = "choice-row";
+      row.innerHTML = `
+        <input type="radio" name="correct-${groupName}">
+        <input type="text" name="choice" value="">
+        <button type="button" onclick="this.parentElement.remove()">🗑</button>
+      `;
+      container.appendChild(row);
+    }
+
+    document.getElementById("addQuestionBtn").addEventListener("click", () => {
+      addQuestionBlock();
+    });
+
+    document.getElementById("editModuleForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const quarter = document.getElementById("quarter").value;
+      const file = document.getElementById("pdf").files[0];
+      const questions = [];
+
+      document.querySelectorAll(".question-block").forEach((block, idx) => {
+        const question = block.querySelector("input[name='question']").value.trim();
+        const choices = Array.from(block.querySelectorAll("input[name='choice']")).map(c => c.value.trim());
+        const radios = block.querySelectorAll("input[type='radio']");
+        const correctIndex = Array.from(radios).findIndex(r => r.checked);
+        const answer = choices[correctIndex] || "";
+
+        if (question && choices.length) {
+          questions.push({ question, choices, answer });
+        }
+      });
+
+      const formData = new FormData();
+      formData.append("quarter", quarter);
+      formData.append("questions", JSON.stringify(questions));
+      if (file) formData.append("pdf", file);
+
+      const res = await fetch(`/api/update-module/${moduleId}`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        alert("✅ Module updated successfully.");
+        window.location.href = "admin.html";
+      } else {
+        alert("❌ Failed to update module.");
+      }
+    });
+
+    loadModule();
+  </script>
+</body>
+</html>

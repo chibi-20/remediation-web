@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      background-color: #e3f2fd;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 3rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .dashboard-card h2 {
+      color: #1565c0;
+      margin-bottom: 0.3rem;
+      font-size: 24px;
+    }
+
+    .subtext {
+      color: #555;
+      margin-bottom: 1.5rem;
+      font-size: 15px;
+    }
+
+    h2.quarter-header {
+      margin-top: 2.5rem;
+      color: #1976d2;
+      border-left: 5px solid #90caf9;
+      padding-left: 10px;
+      font-size: 20px;
+    }
+
+    .module-card {
+      background: #f5faff;
+      padding: 1rem 1.2rem;
+      border-radius: 10px;
+      margin: 0.8rem 0;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+
+    .module-card:hover {
+      transform: scale(1.01);
+    }
+
+    .module-card.locked {
+      background: #fff3f3;
+      color: #b71c1c;
+      border: 1px dashed #e57373;
+    }
+
+    .module-card h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 18px;
+      color: #1565c0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .module-card a {
+      display: inline-block;
+      margin-top: 0.3rem;
+      background: #1565c0;
+      color: white;
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .module-card a:hover {
+      background: #0d47a1;
+    }
+
+    .module-lock {
+      display: inline-block;
+      background-color: #ef9a9a;
+      color: #b71c1c;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      margin-top: 0.3rem;
+    }
+
+    .button-group {
+      margin-top: 2.5rem;
+      text-align: center;
+    }
+
+    .logout-btn {
+      background: #ef5350;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: background-color 0.2s;
+      display: inline-block;
+    }
+
+    .logout-btn:hover {
+      background: #c62828;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 1.5rem 1rem;
+        padding: 1.5rem;
+      }
+
+      .dashboard-card h2 {
+        font-size: 20px;
+      }
+
+      h2.quarter-header {
+        font-size: 18px;
+      }
+
+      .module-card h3 {
+        font-size: 16px;
+      }
+
+      .module-card a {
+        width: 100%;
+        text-align: center;
+        font-size: 15px;
+      }
+
+      .module-lock {
+        width: 100%;
+        display: block;
+        text-align: center;
+        margin-top: 0.5rem;
+      }
+
+      .logout-btn {
+        width: 100%;
+        padding: 0.8rem;
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="dashboard-card">
+      <h2>📚 Student Dashboard</h2>
+      <p class="subtext">Pumili ng module upang magsimula.</p>
+
+      <div class="modules-container" id="modulesContainer">
+        <!-- Dynamic modules will load here -->
+      </div>
+
+      <div class="button-group">
+        <a href="login.html" class="logout-btn">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const lrn = localStorage.getItem("studentLRN");
+    if (!lrn) {
+      alert("Missing student LRN. Please log in again.");
+      window.location.href = "login.html";
+    }
+
+    async function loadDashboard() {
+      const [studentsRes, modulesRes] = await Promise.all([
+        fetch("/students"),
+        fetch("/api/modules")
+      ]);
+
+      const students = await studentsRes.json();
+      const modules = await modulesRes.json();
+      const student = students.find(s => s.lrn === lrn);
+
+      if (!student) {
+        alert("Student not found.");
+        return;
+      }
+
+      const progress = student.progress || {};
+      const container = document.getElementById("modulesContainer");
+      container.innerHTML = "";
+
+      const quarters = ["Q1", "Q2", "Q3", "Q4"];
+      let unlocked = true;
+
+      quarters.forEach(quarter => {
+        const quarterHeader = document.createElement("h2");
+        quarterHeader.textContent = quarter;
+        quarterHeader.className = "quarter-header";
+        container.appendChild(quarterHeader);
+
+        const quarterModules = modules.filter(
+          mod => mod.quarter === quarter && mod.admin_id == student.admin_id
+        );
+
+        if (quarterModules.length === 0) {
+          const noModules = document.createElement("p");
+          noModules.textContent = `No modules available for ${quarter}.`;
+          container.appendChild(noModules);
+        }
+
+        quarterModules.forEach(mod => {
+          const moduleKey = `module${mod.id}`;
+          const score = progress[moduleKey]?.score || 0;
+          const passed = progress[moduleKey]?.passed;
+
+          const card = document.createElement("div");
+          card.className = "module-card" + (!unlocked ? " locked" : "");
+
+          const title = document.createElement("h3");
+          let icon = "📘";
+
+          if (!unlocked) {
+            icon = "🔒";
+          } else if (passed === true) {
+            icon = "✅";
+          } else if (score > 0 && passed === false) {
+            icon = "❌";
+          }
+
+          title.textContent = `${icon} ${mod.lesson || `Module ${mod.id}`}`;
+          card.appendChild(title);
+
+          if (unlocked) {
+            const link = document.createElement("a");
+            link.href = `module-viewer.html?id=${mod.id}`;
+            link.textContent = "Start Module";
+            card.appendChild(link);
+          } else {
+            const lock = document.createElement("span");
+            lock.className = "module-lock";
+            lock.textContent = "🔒 Locked";
+            card.appendChild(lock);
+          }
+
+          if (progress[moduleKey] && passed !== true) unlocked = false;
+          container.appendChild(card);
+        });
+      });
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>
