@@ -126,7 +126,7 @@
       const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value.trim();
 
-      const response = await fetch("/api/register-admin", {
+      const response = await fetch("/tms/remediation-web/api/register-admin.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, grade, subject, username, password }),

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Dashboard - Debug Version</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      background-color: #e3f2fd;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .debug-info {
+      background: #f5f5f5;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 5px;
+      border-left: 4px solid #2196F3;
+    }
+    .error {
+      color: red;
+      background: #ffebee;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+    .success {
+      color: green;
+      background: #e8f5e8;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+    .module-card {
+      border: 1px solid #ddd;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Student Dashboard - Debug Version</h1>
+    
+    <div class="debug-info">
+      <h3>Debug Information</h3>
+      <p id="lrnInfo">Checking LRN...</p>
+      <p id="studentInfo">Checking student data...</p>
+      <p id="modulesInfo">Checking modules...</p>
+    </div>
+    
+    <div id="loginPrompt" style="display: none;">
+      <h2>Please Login First</h2>
+      <p>Enter your LRN to access your dashboard:</p>
+      <input type="text" id="lrnInput" placeholder="Enter your LRN" maxlength="12">
+      <button onclick="setLRN()">Login</button>
+      <p><a href="login.html">Go to Login Page</a></p>
+    </div>
+    
+    <div id="dashboardContent" style="display: none;">
+      <h2 id="welcomeMsg">Welcome, Student!</h2>
+      <div id="modulesContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    let debugMode = true;
+    
+    function debugLog(message) {
+      if (debugMode) {
+        console.log('DEBUG:', message);
+      }
+    }
+    
+    function setLRN() {
+      const lrn = document.getElementById('lrnInput').value.trim();
+      if (lrn) {
+        localStorage.setItem("studentLRN", lrn);
+        location.reload();
+      } else {
+        alert('Please enter a valid LRN');
+      }
+    }
+    
+    async function loadDashboard() {
+      try {
+        // Check LRN
+        const lrn = localStorage.getItem("studentLRN");
+        document.getElementById('lrnInfo').textContent = `LRN from localStorage: ${lrn || 'Not found'}`;
+        
+        if (!lrn) {
+          document.getElementById('loginPrompt').style.display = 'block';
+          return;
+        }
+        
+        debugLog('Loading dashboard for LRN:', lrn);
+        
+        // Load students and modules
+        document.getElementById('studentInfo').textContent = 'Loading student data...';
+        document.getElementById('modulesInfo').textContent = 'Loading modules...';
+        
+        const [studentsRes, modulesRes] = await Promise.all([
+          fetch("/tms/remediation-web/api/students.php"),
+          fetch("/tms/remediation-web/api/modules.php")
+        ]);
+        
+        debugLog('Students response status:', studentsRes.status);
+        debugLog('Modules response status:', modulesRes.status);
+        
+        if (!studentsRes.ok) {
+          throw new Error(`Students API failed: ${studentsRes.status}`);
+        }
+        
+        if (!modulesRes.ok) {
+          throw new Error(`Modules API failed: ${modulesRes.status}`);
+        }
+        
+        const students = await studentsRes.json();
+        const modules = await modulesRes.json();
+        
+        debugLog('Students data:', students);
+        debugLog('Modules data:', modules);
+        
+        document.getElementById('studentInfo').textContent = `Found ${students.length} students in database`;
+        document.getElementById('modulesInfo').textContent = `Found ${modules.length} modules in database`;
+        
+        // Find current student
+        const student = students.find(s => s.lrn === lrn);
+        
+        if (!student) {
+          document.getElementById('studentInfo').innerHTML = `
+            <div class="error">
+              Student with LRN ${lrn} not found in database.<br>
+              <a href="register.html">Register as a new student</a>
+            </div>
+          `;
+          return;
+        }
+        
+        debugLog('Current student:', student);
+        document.getElementById('studentInfo').innerHTML = `
+          <div class="success">
+            Student found: ${student.firstName} ${student.lastName}<br>
+            Admin ID: ${student.admin_id}
+          </div>
+        `;
+        
+        // Show welcome message
+        document.getElementById('welcomeMsg').textContent = `Welcome, ${student.firstName} ${student.lastName}!`;
+        document.getElementById('dashboardContent').style.display = 'block';
+        
+        // Filter modules for this student's admin
+        const studentModules = modules.filter(mod => mod.admin_id == student.admin_id);
+        
+        debugLog('Filtered modules for student:', studentModules);
+        
+        const container = document.getElementById("modulesContainer");
+        container.innerHTML = "";
+        
+        if (studentModules.length === 0) {
+          container.innerHTML = `
+            <div class="error">
+              No modules found for your teacher (Admin ID: ${student.admin_id}).<br>
+              Your teacher needs to create modules first.
+            </div>
+          `;
+          return;
+        }
+        
+        // Group modules by quarter
+        const quarters = ["Q1", "Q2", "Q3", "Q4"];
+        
+        quarters.forEach(quarter => {
+          const quarterModules = studentModules.filter(mod => mod.quarter === quarter);
+          
+          if (quarterModules.length > 0) {
+            const quarterHeader = document.createElement("h2");
+            quarterHeader.textContent = quarter;
+            quarterHeader.style.color = "#1976d2";
+            quarterHeader.style.marginTop = "2rem";
+            container.appendChild(quarterHeader);
+            
+            quarterModules.forEach(mod => {
+              const card = document.createElement("div");
+              card.className = "module-card";
+              
+              card.innerHTML = `
+                <h3>📘 Module ${mod.id} (${mod.quarter})</h3>
+                <p><strong>File:</strong> ${mod.filename}</p>
+                <p><strong>Admin ID:</strong> ${mod.admin_id}</p>
+                <a href="module-viewer.html?id=${mod.id}" style="background: #1976d2; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">Start Module</a>
+              `;
+              
+              container.appendChild(card);
+            });
+          }
+        });
+        
+        document.getElementById('modulesInfo').innerHTML = `
+          <div class="success">
+            Showing ${studentModules.length} modules for your teacher
+          </div>
+        `;
+        
+      } catch (error) {
+        debugLog('Error loading dashboard:', error);
+        
+        document.getElementById('studentInfo').innerHTML = `
+          <div class="error">
+            Error loading dashboard: ${error.message}<br>
+            <a href="../debug-dashboard.php">View detailed debug info</a>
+          </div>
+        `;
+      }
+    }
+    
+    // Load dashboard when page loads
+    loadDashboard();
+  </script>
+</body>
+</html>

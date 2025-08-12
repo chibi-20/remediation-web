@@ -180,42 +180,60 @@
     }
 
     async function loadDashboard() {
-      const [studentsRes, modulesRes] = await Promise.all([
-        fetch("/students"),
-        fetch("/api/modules")
-      ]);
+      try {
+        console.log("Loading dashboard for LRN:", lrn);
+        
+        const [studentsRes, modulesRes] = await Promise.all([
+          fetch("/tms/remediation-web/api/students.php"),
+          fetch("/tms/remediation-web/api/modules.php")
+        ]);
 
-      const students = await studentsRes.json();
-      const modules = await modulesRes.json();
-      const student = students.find(s => s.lrn === lrn);
+        const students = await studentsRes.json();
+        const modules = await modulesRes.json();
+        
+        const student = students.find(s => s.lrn === lrn);
 
-      if (!student) {
-        alert("Student not found.");
-        return;
-      }
-
-      const progress = student.progress || {};
-      const container = document.getElementById("modulesContainer");
-      container.innerHTML = "";
-
-      const quarters = ["Q1", "Q2", "Q3", "Q4"];
-      let unlocked = true;
-
-      quarters.forEach(quarter => {
-        const quarterHeader = document.createElement("h2");
-        quarterHeader.textContent = quarter;
-        quarterHeader.className = "quarter-header";
-        container.appendChild(quarterHeader);
-
-        const quarterModules = modules.filter(
-          mod => mod.quarter === quarter && mod.admin_id == student.admin_id
-        );
-
-        if (quarterModules.length === 0) {
-          const noModules = document.createElement("p");
-          noModules.textContent = `No modules available for ${quarter}.`;
-          container.appendChild(noModules);
+        if (!student) {
+          alert("Student not found.");
+          return;
         }
+
+        console.log("Current student:", student);
+        
+        // Parse progress - handle both string and object
+        let progress = {};
+        if (typeof student.progress === 'string') {
+          try {
+            progress = JSON.parse(student.progress);
+          } catch (e) {
+            console.warn("Failed to parse progress JSON:", student.progress);
+            progress = {};
+          }
+        } else {
+          progress = student.progress || {};
+        }
+        
+        const container = document.getElementById("modulesContainer");
+        container.innerHTML = "";
+
+        const quarters = ["Q1", "Q2", "Q3", "Q4"];
+        let unlocked = true;
+
+        quarters.forEach(quarter => {
+          const quarterHeader = document.createElement("h2");
+          quarterHeader.textContent = quarter;
+          quarterHeader.className = "quarter-header";
+          container.appendChild(quarterHeader);
+
+          const quarterModules = modules.filter(
+            mod => mod.quarter === quarter && mod.admin_id == student.admin_id
+          );
+
+          if (quarterModules.length === 0) {
+            const noModules = document.createElement("p");
+            noModules.textContent = `No modules available for ${quarter}.`;
+            container.appendChild(noModules);
+          }
 
         quarterModules.forEach(mod => {
           const moduleKey = `module${mod.id}`;
@@ -255,6 +273,10 @@
           container.appendChild(card);
         });
       });
+    } catch (error) {
+      console.error("Dashboard loading error:", error);
+      alert("Error loading dashboard. Check console for details.");
+    }
     }
 
     loadDashboard();

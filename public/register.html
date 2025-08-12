@@ -159,20 +159,42 @@
 
   <script>
     // Load all registered teachers into the dropdown
-    fetch('/api/admins')
-      .then(res => res.json())
+    fetch('/tms/remediation-web/simple-admins-test.php')
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return res.json();
+      })
       .then(admins => {
         const adminSelect = document.getElementById('admin');
-        admins.forEach(admin => {
+        
+        if (admins && admins.length > 0) {
+          admins.forEach(admin => {
+            const option = document.createElement('option');
+            option.value = admin.id;
+            option.textContent = `${admin.name || admin.username} (${admin.username})`;
+            adminSelect.appendChild(option);
+          });
+        } else {
+          // If no admins found, add a default option
           const option = document.createElement('option');
-          option.value = admin.id;
-          option.textContent = admin.username;
+          option.value = '1';
+          option.textContent = 'Default Teacher';
           adminSelect.appendChild(option);
-        });
+        }
       })
       .catch(err => {
         console.error('Failed to load admins:', err);
-        alert("❌ Failed to load teachers. Try again later.");
+        // Fallback: Add a default option so students can still register
+        const adminSelect = document.getElementById('admin');
+        const option = document.createElement('option');
+        option.value = '1';
+        option.textContent = 'Default Teacher (Admin registration may be needed)';
+        adminSelect.appendChild(option);
+        
+        // Show a helpful message
+        alert("⚠️ Could not load teacher list. You can still register, but an admin may need to register first.");
       });
 
     // Handle student registration form
@@ -194,7 +216,7 @@
       msg.textContent = '';
 
       try {
-        const res = await fetch('/register', {
+        const res = await fetch('/tms/remediation-web/api/register-student.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)

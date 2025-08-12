@@ -216,7 +216,7 @@
     const questionsContainer = document.getElementById("questionsContainer");
 
     async function loadModule() {
-      const res = await fetch("/api/modules");
+      const res = await fetch("/tms/remediation-web/api/modules.php");
       const modules = await res.json();
       const module = modules.find(m => m.id == moduleId);
       if (!module) return alert("Module not found.");

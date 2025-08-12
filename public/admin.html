@@ -185,13 +185,13 @@
     let modules = [];
 
     async function fetchStudents() {
-      const res = await fetch('/students');
+      const res = await fetch('/tms/remediation-web/api/students.php');
       students = await res.json();
       renderTable();
     }
 
     async function loadModules() {
-      const res = await fetch("/api/modules");
+      const res = await fetch("/tms/remediation-web/api/modules.php");
       modules = await res.json();
       renderModuleHeaders();
       renderTable();
@@ -260,7 +260,7 @@
     }
 
     async function resetProgress(id) {
-      await fetch('/api/reset-progress', {
+      await fetch('/tms/remediation-web/api/reset-progress.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })

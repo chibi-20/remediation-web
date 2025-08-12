@@ -1,11 +1,11 @@
 ======================================
         PROJECT: SAGIP ARAL
-        Remediation Learning System
+        Remediation Learning System (PHP Version)
 ======================================
 
 DESCRIPTION:
 ------------
-Project SAGIP ARAL is a digital learning platform developed to support the remediation of students by enabling teachers to upload modules (in PDF format), create quizzes, and track student progress. This project is especially designed for use in schools like Jacobo Z. Gonzales Memorial National High School (JZGMNSH), led by Sir Jay Mar V. Canturia.
+Project SAGIP ARAL is a digital learning platform developed to support the remediation of students by enabling teachers to upload modules (in PDF format), create quizzes, and track student progress. This project has been converted from Node.js to PHP for better compatibility with standard web hosting environments and XAMPP development setups.
 
 FEATURES:
 ---------
@@ -24,7 +24,8 @@ FEATURES:
 - Track Completed and Unfinished Modules
 
 🔒 AUTHENTICATION:
-- Secure login for admins using hashed passwords (bcrypt)
+- Secure login for admins using hashed passwords (PHP password_hash)
+- Session management for maintaining login state
 - Each admin manages their own set of students and modules
 
 📄 MODULE BUILDER:
@@ -37,55 +38,95 @@ FEATURES:
 - Automatically stores student answers and completion
 
 📁 FILE STORAGE:
-- PDF modules are uploaded and stored in the `public/uploads/` folder
+- PDF modules are uploaded and stored in the `public/modules/` folder
 
 💾 BACKEND:
-- Built with Express.js
-- Uses `better-sqlite3` for fast and reliable local database access
-- Database contains tables for Admins, Students, Modules, Questions, and Quiz Results
+- Built with PHP 7.4+
+- Uses PDO SQLite for fast and reliable local database access
+- Database contains tables for Admins, Students, and Modules
+- RESTful API endpoints for all operations
 
 🔧 FRONTEND:
 - Fully responsive and easy to navigate
 - Compatible with both desktop and mobile browsers
+- Same user interface as the original Node.js version
 
 INSTALLATION:
 -------------
-1. Make sure you have Node.js installed on your system.
-2. Clone this project or download the source code.
-3. Navigate to the project directory in your terminal.
-4. Run:
-   npm install
-5. Start the server:
-   node server.js
-6. Open your browser and go to:
-   http://localhost:3000
+
+### FOR XAMPP (RECOMMENDED):
+1. Make sure you have XAMPP installed on your system
+2. Copy this project folder to: C:\xampp\htdocs\tms\remediation-web
+3. Start Apache in XAMPP Control Panel
+4. Open your browser and go to: http://localhost/tms/remediation-web
+
+### FOR BUILT-IN PHP SERVER:
+1. Make sure you have PHP 7.4+ installed on your system
+2. Navigate to the project directory in your terminal
+3. Run: php -S localhost:8000
+4. Open your browser and go to: http://localhost:8000
+
+### FOR PRODUCTION SERVER:
+1. Upload all files to your web server
+2. Ensure PHP 7.4+ and PDO SQLite extension are available
+3. Set proper file permissions for database and modules directory
+4. Configure web server to route requests through index.php
 
 FOLDER STRUCTURE:
 -----------------
+- /api                     -> PHP API endpoints
+  - admin-login.php        -> Admin authentication
+  - register-admin.php     -> Admin registration
+  - students.php           -> Student data management
+  - modules.php            -> Module listing
+  - create-module.php      -> Module creation
+  - update-module.php      -> Module editing
+  - update-progress.php    -> Progress tracking
+
 - /public
-  - /uploads         -> Stores uploaded PDF files
-  - /css             -> Contains stylesheets
-  - /js              -> Contains frontend scripts
-  - *.html           -> All client-facing pages
+  - /modules               -> Stores uploaded PDF files
+  - /css                   -> Contains stylesheets
+  - /js                    -> Contains frontend scripts
+  - *.html                 -> All client-facing pages
 
-- /database
-  - sagip-aral.db    -> SQLite database file (auto-created)
+- index.php                -> Main entry point and router
+- config.php               -> Database configuration and utilities
+- composer.json            -> PHP dependencies
+- .htaccess               -> Apache configuration
+- students.db             -> SQLite database file (auto-created)
 
-- server.js          -> Main Express backend
+MIGRATION FROM NODE.JS:
+-----------------------
+This project has been converted from Node.js to PHP with the following changes:
+- Replaced Express.js server with PHP and Apache/Nginx
+- Converted all API routes to individual PHP files
+- Maintained the same SQLite database schema using PDO
+- Added proper routing through index.php and .htaccess
+- Kept all frontend HTML/CSS/JavaScript files unchanged
+- Updated authentication to use PHP sessions instead of JWT
+
+REQUIREMENTS:
+-------------
+- PHP 7.4 or higher
+- PDO SQLite extension
+- Apache/Nginx web server (or PHP built-in server for development)
+- mod_rewrite enabled (for Apache clean URLs)
 
 NOTES:
 ------
-- Make sure uploaded PDF files are under the size limit (around 10MB for best performance).
-- Admin accounts must be registered first before logging in.
-- Each student must select a teacher (admin) during registration to access modules.
+- Make sure uploaded PDF files are under the size limit (around 10MB for best performance)
+- Admin accounts must be registered first before logging in
+- Each student must select a teacher (admin) during registration to access modules
+- The SQLite database file will be created automatically on first run
+- All frontend functionality remains the same as the original Node.js version
 
 DEVELOPED BY:
 -------------
 Jay Mar V. Canturia
 Teacher I, Araling Panlipunan Department
 Jacobo Z. Gonzales Memorial National High School  
-With the assistance of ChatGPT (OpenAI)
+Converted to PHP version with the assistance of GitHub Copilot
 
-Last Updated: July 11, 2025
+Last Updated: August 12, 2025
 
 ======================================

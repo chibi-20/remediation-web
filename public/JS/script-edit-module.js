@@ -7,7 +7,7 @@ const form = document.getElementById("editModuleForm");
 let moduleData = null;
 
 async function loadModule() {
-  const res = await fetch("/api/modules");
+  const res = await fetch("/tms/remediation-web/api/modules.php");
   const modules = await res.json();
   moduleData = modules.find(m => m.id == moduleId);
 
@@ -115,7 +115,7 @@ form.addEventListener("submit", async (e) => {
     formData.append("pdf", pdfFile);
   }
 
-  const res = await fetch("/api/update-module", {
+  const res = await fetch(`/tms/remediation-web/api/update-module.php?id=${moduleId}`, {
     method: "POST",
     body: formData
   });

@@ -23,16 +23,7 @@
 
     #pdfContainer {
       width: 100%;
-      overflow-x: hidden;
       margin-bottom: 30px;
-    }
-
-    iframe {
-      width: 100%;
-      height: 100vh;
-      border: none;
-      border-radius: 8px;
-      display: block;
     }
 
     form {
@@ -91,10 +82,6 @@
         font-size: 20px;
       }
 
-      iframe {
-        height: 400px;
-      }
-
       .question {
         padding: 0.8rem;
       }
@@ -125,7 +112,13 @@
 
   <!-- PDF Viewer -->
   <div id="pdfContainer">
-    <iframe id="pdfViewer" src=""></iframe>
+    <div style="background: white; padding: 1rem; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+      <h3>📖 Module Content</h3>
+      <p>Click the button below to open the module PDF in a new tab:</p>
+      <button id="openPdfBtn" type="button" style="background: #1565c0; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">
+        📄 Open Module PDF
+      </button>
+    </div>
   </div>
 
   <!-- Quiz Form -->
@@ -146,7 +139,7 @@
     }
 
     async function loadModule() {
-      const res = await fetch("/api/modules");
+      const res = await fetch("/tms/remediation-web/api/modules.php");
       const modules = await res.json();
       const currentQuarter = modules.find(m => m.id == moduleId)?.quarter;
       const quarterModules = modules.filter(m => m.quarter === currentQuarter);
@@ -160,8 +153,11 @@
 
       document.getElementById("moduleTitle").textContent = `${module.quarter} - Module ${moduleIndex}`;
 
-      // PDF with Zoom=100
-      document.getElementById("pdfViewer").src = `/modules/${module.filename}#toolbar=0&navpanes=0&zoom=100`;
+      // Set up PDF button to open in new tab
+      const pdfUrl = `/tms/remediation-web/public/MODULES/${module.filename}`;
+      document.getElementById("openPdfBtn").onclick = function() {
+        window.open(pdfUrl, '_blank');
+      };
 
       const container = document.getElementById("questionsContainer");
       container.innerHTML = "";
@@ -198,7 +194,7 @@
         document.getElementById("result").textContent =
           `You got ${score}/${module.questions.length}. ${passed ? "✅ Passed!" : "❌ Try again."}`;
 
-        fetch("/update-progress", {
+        fetch("/tms/remediation-web/api/update-progress.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
