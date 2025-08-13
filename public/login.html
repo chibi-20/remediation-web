@@ -105,26 +105,43 @@
 </head>
 <body>
   <div class="login-container">
-    <h2>Student Login</h2>
-    <label for="lrn">LRN:</label>
-    <input type="text" id="lrn" placeholder="Enter your LRN">
-    <button onclick="loginStudent()">Log In</button>
+  <h2>Student Login</h2>
+  <label for="lrn">LRN:</label>
+  <input type="text" id="lrn" placeholder="Enter your LRN">
+  <label for="password">Password:</label>
+  <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password">
+  <button onclick="loginStudent()">Log In</button>
 
     <div class="link-group">
       <a href="register.html" class="link-btn">Create Account</a>
-      <a href="admin-login.html" class="link-btn">Admin Login</a>
+      <a href="admin-login.html" class="link-btn">Teacher Login</a>
     </div>
   </div>
 
   <script>
-    function loginStudent() {
+    async function loginStudent() {
       const lrn = document.getElementById("lrn").value.trim();
-      if (!lrn) {
-        alert("Please enter your LRN.");
+      const password = document.getElementById("password").value;
+      if (!lrn || !password) {
+        alert("Please enter both LRN and password.");
         return;
       }
-      localStorage.setItem("studentLRN", lrn);
-      window.location.href = "dashboard.html";
+      try {
+        const res = await fetch('/tms/remediation-web/api/student-login.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lrn, password })
+        });
+        const result = await res.json();
+        if (result.success) {
+          localStorage.setItem("studentLRN", lrn);
+          window.location.href = "dashboard.html";
+        } else {
+          alert(result.error || "Login failed.");
+        }
+      } catch (err) {
+        alert("Server error. Please try again later.");
+      }
     }
   </script>
 </body>

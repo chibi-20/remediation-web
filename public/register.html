@@ -147,6 +147,9 @@
       <label for="lrn">LRN</label>
       <input type="text" id="lrn" required>
 
+  <label for="password">Password</label>
+  <input type="password" id="password" required minlength="6" autocomplete="new-password">
+
       <button type="submit">Register</button>
     </form>
 
@@ -208,6 +211,7 @@
         grade: document.getElementById('grade').value.trim(),
         section: document.getElementById('section').value.trim(),
         lrn: document.getElementById('lrn').value.trim(),
+        password: document.getElementById('password').value,
         adminId: document.getElementById('admin').value
       };
 

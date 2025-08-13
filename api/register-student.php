@@ -13,7 +13,15 @@ $firstName = sanitizeInput($input['firstName'] ?? '');
 $lastName = sanitizeInput($input['lastName'] ?? '');
 $section = sanitizeInput($input['section'] ?? '');
 $lrn = sanitizeInput($input['lrn'] ?? '');
-$adminId = $input['admin_id'] ?? null;
+$adminId = $input['adminId'] ?? null;
+$password = $input['password'] ?? '';
+
+// Validate password
+if (strlen($password) < 6) {
+    jsonResponse(['success' => false, 'error' => 'Password must be at least 6 characters.']);
+}
+
+$passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
 // Validate required fields
 $error = validateRequired(['firstName', 'lastName', 'section', 'lrn'], $input);
@@ -35,9 +43,9 @@ try {
         jsonResponse(['success' => false, 'error' => 'LRN already exists.']);
     }
     
-    // Insert new student
-    $stmt = $pdo->prepare("INSERT INTO students (firstName, lastName, section, lrn, admin_id) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$firstName, $lastName, $section, $lrn, $adminId]);
+    // Insert new student with password
+    $stmt = $pdo->prepare("INSERT INTO students (firstName, lastName, section, lrn, password, admin_id) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$firstName, $lastName, $section, $lrn, $passwordHash, $adminId]);
     
     $studentId = $pdo->lastInsertId();
     

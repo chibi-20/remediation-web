@@ -8,12 +8,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
 }
 
+
 $input = json_decode(file_get_contents('php://input'), true);
 $lrn = sanitizeInput($input['lrn'] ?? '');
+$password = $input['password'] ?? '';
 
 // Validate required fields
-if (empty($lrn)) {
-    jsonResponse(['success' => false, 'error' => 'LRN is required.']);
+if (empty($lrn) || empty($password)) {
+    jsonResponse(['success' => false, 'error' => 'LRN and password are required.']);
 }
 
 try {
@@ -22,16 +24,17 @@ try {
     $stmt->execute([$lrn]);
     $student = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if (!$student) {
-        jsonResponse(['success' => false, 'error' => 'Student not found. Please check your LRN.']);
+    if (!$student || empty($student['password'])) {
+        jsonResponse(['success' => false, 'error' => 'Invalid LRN or password.']);
     }
-    
+    if (!password_verify($password, $student['password'])) {
+        jsonResponse(['success' => false, 'error' => 'Invalid LRN or password.']);
+    }
     // Start session and store student info
     startSession();
     $_SESSION['student_id'] = $student['id'];
     $_SESSION['student_lrn'] = $student['lrn'];
     $_SESSION['student_name'] = $student['firstName'] . ' ' . $student['lastName'];
-    
     jsonResponse([
         'success' => true,
         'student' => [
