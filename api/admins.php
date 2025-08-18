@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT id, name, grade, subject, username FROM admins");
+    $stmt = $pdo->prepare("SELECT id, name, grade, subject, sections, username FROM admins");
     $stmt->execute();
     $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
     

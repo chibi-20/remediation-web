@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module Assessment</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .card-shadow {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <header class="gradient-bg shadow-lg">
+    <div class="max-w-4xl mx-auto px-4 py-6 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+          <span class="text-2xl">📝</span>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-white">Module Assessment</h1>
+        </div>
+      </div>
+      <div class="text-white text-sm">
+        <span id="studentInfo"></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto mt-10 p-8">
+    <!-- Module Info Card -->
+    <div class="bg-white rounded-xl card-shadow p-6 mb-6">
+      <div id="moduleInfo">
+        <h2 class="text-2xl font-bold text-blue-700 mb-2" id="moduleTitle">Loading...</h2>
+        <p class="text-gray-600 mb-4" id="moduleDescription"></p>
+        <div class="flex items-center space-x-4 text-sm text-gray-500">
+          <span id="questionCount"></span>
+          <span id="passingScore"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Previous Attempt Info -->
+    <div id="previousAttempt" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 hidden">
+      <h3 class="font-semibold text-yellow-800 mb-2">Previous Attempt</h3>
+      <p class="text-yellow-700" id="previousAttemptInfo"></p>
+    </div>
+
+    <!-- PDF Viewer -->
+    <div class="bg-white rounded-xl card-shadow p-6 mb-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">📄 Study the Module Content First</h3>
+      <div class="bg-gray-100 rounded-lg p-4">
+        <embed id="pdfViewer" type="application/pdf" width="100%" height="400px" class="rounded">
+      </div>
+    </div>
+
+    <!-- Assessment Form -->
+    <div class="bg-white rounded-xl card-shadow p-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-6">📝 Assessment Questions</h3>
+      <form id="assessmentForm">
+        <div id="questionsContainer">
+          <!-- Questions will be loaded here -->
+        </div>
+        
+        <div class="mt-8 flex justify-between">
+          <a href="dashboard.html" class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200">Back to Dashboard</a>
+          <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">Submit Assessment</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Results Modal -->
+    <div id="resultsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+      <div class="bg-white rounded-xl p-8 max-w-md mx-4">
+        <div class="text-center">
+          <div id="resultIcon" class="text-6xl mb-4"></div>
+          <h3 class="text-2xl font-bold mb-4" id="resultTitle"></h3>
+          <div id="resultDetails" class="text-gray-600 mb-6"></div>
+          <button onclick="closeResultsModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors duration-200">Continue</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let moduleData = null;
+    let studentLRN = localStorage.getItem('studentLRN');
+
+    if (!studentLRN) {
+      window.location.href = 'login.html';
+    }
+
+    // Get module ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const moduleId = urlParams.get('id');
+
+    if (!moduleId) {
+      alert('Module not found');
+      window.location.href = 'dashboard.html';
+    }
+
+    document.getElementById('studentInfo').textContent = `Student: ${studentLRN}`;
+
+    // Load module and assessment data
+    async function loadModuleAssessment() {
+      try {
+        const response = await fetch(`/tms/remediation-web/api/get-module-assessment.php?id=${moduleId}&studentLRN=${studentLRN}`);
+        const result = await response.json();
+
+        if (result.success) {
+          moduleData = result.module;
+          displayModuleInfo();
+          displayPDF();
+          displayQuestions();
+          
+          if (result.previousAttempt) {
+            showPreviousAttempt(result.previousAttempt);
+          }
+        } else {
+          alert('Error loading module: ' + result.error);
+          window.location.href = 'dashboard.html';
+        }
+      } catch (error) {
+        alert('Error loading module');
+        window.location.href = 'dashboard.html';
+      }
+    }
+
+    function displayModuleInfo() {
+      document.getElementById('moduleTitle').textContent = moduleData.title;
+      document.getElementById('moduleDescription').textContent = moduleData.description;
+      document.getElementById('questionCount').textContent = `${moduleData.totalQuestions} Questions`;
+      document.getElementById('passingScore').textContent = `Passing Score: ${moduleData.passingScore}%`;
+    }
+
+    function displayPDF() {
+      const pdfViewer = document.getElementById('pdfViewer');
+      pdfViewer.src = `/tms/remediation-web/public/modules/${moduleData.filename}`;
+    }
+
+    function displayQuestions() {
+      const container = document.getElementById('questionsContainer');
+      container.innerHTML = '';
+
+      moduleData.questions.forEach((question, index) => {
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'mb-8 p-6 border border-gray-200 rounded-lg';
+        questionDiv.innerHTML = `
+          <h4 class="font-semibold text-gray-800 mb-4">Question ${index + 1}</h4>
+          <p class="text-gray-700 mb-4">${question.question}</p>
+          <div class="space-y-2">
+            <label class="flex items-center">
+              <input type="radio" name="question_${index}" value="A" class="mr-3" required>
+              <span>A. ${question.optionA}</span>
+            </label>
+            <label class="flex items-center">
+              <input type="radio" name="question_${index}" value="B" class="mr-3" required>
+              <span>B. ${question.optionB}</span>
+            </label>
+            <label class="flex items-center">
+              <input type="radio" name="question_${index}" value="C" class="mr-3" required>
+              <span>C. ${question.optionC}</span>
+            </label>
+            <label class="flex items-center">
+              <input type="radio" name="question_${index}" value="D" class="mr-3" required>
+              <span>D. ${question.optionD}</span>
+            </label>
+          </div>
+        `;
+        container.appendChild(questionDiv);
+      });
+    }
+
+    function showPreviousAttempt(attempt) {
+      const previousDiv = document.getElementById('previousAttempt');
+      const infoDiv = document.getElementById('previousAttemptInfo');
+      
+      const passedText = attempt.passed ? 'PASSED' : 'FAILED';
+      const passedClass = attempt.passed ? 'text-green-600' : 'text-red-600';
+      
+      infoDiv.innerHTML = `
+        Score: <span class="${passedClass} font-semibold">${attempt.score}% (${passedText})</span><br>
+        Taken: ${new Date(attempt.taken_at).toLocaleString()}
+        ${!attempt.passed ? '<br><span class="text-red-600">You can retake this assessment to improve your score.</span>' : ''}
+      `;
+      
+      previousDiv.classList.remove('hidden');
+    }
+
+    // Handle form submission
+    document.getElementById('assessmentForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const answers = [];
+      for (let i = 0; i < moduleData.totalQuestions; i++) {
+        const selected = document.querySelector(`input[name="question_${i}"]:checked`);
+        if (!selected) {
+          alert(`Please answer question ${i + 1}`);
+          return;
+        }
+        answers.push(selected.value);
+      }
+
+      try {
+        const response = await fetch('/tms/remediation-web/api/take-assessment.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            moduleId: parseInt(moduleId),
+            studentLRN: studentLRN,
+            answers: answers
+          })
+        });
+
+        const result = await response.json();
+        showResults(result);
+      } catch (error) {
+        alert('Error submitting assessment');
+      }
+    });
+
+    function showResults(result) {
+      const modal = document.getElementById('resultsModal');
+      const icon = document.getElementById('resultIcon');
+      const title = document.getElementById('resultTitle');
+      const details = document.getElementById('resultDetails');
+
+      if (result.success) {
+        if (result.passed) {
+          icon.textContent = '🎉';
+          title.textContent = 'Congratulations!';
+          title.className = 'text-2xl font-bold mb-4 text-green-600';
+        } else {
+          icon.textContent = '😔';
+          title.textContent = 'Try Again';
+          title.className = 'text-2xl font-bold mb-4 text-red-600';
+        }
+
+        details.innerHTML = `
+          <p class="mb-2">Your Score: <strong>${result.score}%</strong></p>
+          <p class="mb-2">Correct Answers: ${result.correctAnswers} out of ${result.totalQuestions}</p>
+          <p class="mb-4">${result.message}</p>
+        `;
+      } else {
+        icon.textContent = '❌';
+        title.textContent = 'Error';
+        title.className = 'text-2xl font-bold mb-4 text-red-600';
+        details.innerHTML = `<p>${result.error}</p>`;
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeResultsModal() {
+      document.getElementById('resultsModal').classList.add('hidden');
+      document.getElementById('resultsModal').classList.remove('flex');
+      window.location.href = 'dashboard.html';
+    }
+
+    // Load data on page load
+    loadModuleAssessment();
+  </script>
+</body>
+</html>

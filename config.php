@@ -36,6 +36,7 @@ class Database {
                 name VARCHAR(255),
                 grade VARCHAR(100),
                 subject VARCHAR(255),
+                sections TEXT,
                 username VARCHAR(100) UNIQUE,
                 password VARCHAR(255),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

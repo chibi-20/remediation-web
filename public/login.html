@@ -2,128 +2,61 @@
 <html lang="tl">
 <head>
   <meta charset="UTF-8">
-  <title>Student Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="css/style.css">
+  <title>Student Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      background-color: #e3f2fd;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
-
-    .login-container {
-      max-width: 400px;
-      margin: 5rem auto;
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-
-    h2 {
-      color: #1565c0;
-      margin-bottom: 1.5rem;
-    }
-
-    label {
-      display: block;
-      text-align: left;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-      color: #333;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-bottom: 1.2rem;
-      box-sizing: border-box;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      background-color: #1565c0;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #0d47a1;
-    }
-
-    .link-group {
-      margin-top: 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .link-btn {
-      color: #1565c0;
-      text-decoration: none;
-      font-weight: bold;
-      flex: 1 1 45%;
-      text-align: center;
-      background: #e3f2fd;
-      padding: 10px;
-      border-radius: 6px;
-      transition: background-color 0.3s;
-    }
-
-    .link-btn:hover {
-      background-color: #bbdefb;
-    }
-
-    @media (max-width: 480px) {
-      .login-container {
-        margin: 2rem 1rem;
-        padding: 1.5rem;
-      }
-
-      .link-group {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .link-btn {
-        flex: 1 1 100%;
-      }
+    .card-shadow {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
-<body>
-  <div class="login-container">
-  <h2>Student Login</h2>
-  <label for="lrn">LRN:</label>
-  <input type="text" id="lrn" placeholder="Enter your LRN">
-  <label for="password">Password:</label>
-  <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password">
-  <button onclick="loginStudent()">Log In</button>
-
-    <div class="link-group">
-      <a href="register.html" class="link-btn">Create Account</a>
-      <a href="admin-login.html" class="link-btn">Teacher Login</a>
+<body class="bg-gray-50 min-h-screen">
+  <header class="gradient-bg shadow-lg">
+    <div class="max-w-xl mx-auto px-4 py-6 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+          <span class="text-2xl">🔑</span>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-white">Student Login</h1>
+        </div>
+      </div>
     </div>
-  </div>
-
+  </header>
+  <main class="max-w-md mx-auto mt-10 p-8 bg-white rounded-xl card-shadow">
+    <h2 class="text-2xl font-bold text-blue-700 mb-6 text-center">Sign in to your account</h2>
+    <form id="loginForm" class="space-y-5">
+      <div>
+        <label for="lrn" class="block text-sm font-medium text-gray-700 mb-1">LRN</label>
+        <input type="text" id="lrn" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required placeholder="Enter your LRN">
+      </div>
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <input type="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required placeholder="Enter your password" autocomplete="current-password">
+      </div>
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors duration-200">Login</button>
+    </form>
+    <div class="flex justify-between mt-6">
+      <a href="register.html" class="text-blue-600 hover:underline">Create Account</a>
+      <a href="admin-login.html" class="text-blue-600 hover:underline">Teacher Login</a>
+    </div>
+    <div id="message" class="mt-4 text-center text-red-500"></div>
+  </main>
   <script>
-    async function loginStudent() {
-      const lrn = document.getElementById("lrn").value.trim();
-      const password = document.getElementById("password").value;
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const lrn = document.getElementById('lrn').value.trim();
+      const password = document.getElementById('password').value;
+      const msg = document.getElementById('message');
+      msg.textContent = '';
       if (!lrn || !password) {
-        alert("Please enter both LRN and password.");
+        msg.textContent = 'Please enter both LRN and password.';
         return;
       }
       try {
@@ -137,12 +70,12 @@
           localStorage.setItem("studentLRN", lrn);
           window.location.href = "dashboard.html";
         } else {
-          alert(result.error || "Login failed.");
+          msg.textContent = result.error || "Login failed.";
         }
       } catch (err) {
-        alert("Server error. Please try again later.");
+        msg.textContent = "Server error. Please try again later.";
       }
-    }
+    });
   </script>
 </body>
 </html>

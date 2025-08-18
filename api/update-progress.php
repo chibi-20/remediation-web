@@ -8,6 +8,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
 }
 
+// Check authentication
+startSession();
+if (!isset($_SESSION['admin_id'])) {
+    jsonResponse(['success' => false, 'error' => 'Authentication required'], 401);
+}
+
+$adminId = $_SESSION['admin_id'];
 $input = json_decode(file_get_contents('php://input'), true);
 $lrn = sanitizeInput($input['lrn'] ?? '');
 $module = sanitizeInput($input['module'] ?? '');
@@ -19,13 +26,13 @@ if (empty($lrn) || empty($module)) {
 }
 
 try {
-    // Find student by LRN
-    $stmt = $pdo->prepare("SELECT * FROM students WHERE lrn = ?");
-    $stmt->execute([$lrn]);
+    // Find student by LRN AND verify they belong to this teacher
+    $stmt = $pdo->prepare("SELECT * FROM students WHERE lrn = ? AND admin_id = ?");
+    $stmt->execute([$lrn, $adminId]);
     $student = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$student) {
-        jsonResponse(['error' => 'Student not found.'], 404);
+        jsonResponse(['error' => 'Student not found or access denied.'], 404);
     }
     
     // Parse existing progress
@@ -35,8 +42,8 @@ try {
     $progress[$module] = $score;
     
     // Save updated progress
-    $stmt = $pdo->prepare("UPDATE students SET progress = ? WHERE lrn = ?");
-    $stmt->execute([json_encode($progress), $lrn]);
+    $stmt = $pdo->prepare("UPDATE students SET progress = ? WHERE lrn = ? AND admin_id = ?");
+    $stmt->execute([json_encode($progress), $lrn, $adminId]);
     
     jsonResponse(['success' => true]);
     

@@ -1,228 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Module Viewer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f3f7fc;
-      padding: 20px;
-      max-width: 900px;
-      margin: auto;
-      display: block;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
-
-    h2 {
-      color: #1565c0;
-      margin-bottom: 1rem;
-      font-size: 24px;
-    }
-
-    #pdfContainer {
-      width: 100%;
-      margin-bottom: 30px;
-    }
-
-    form {
-      display: block;
-      width: 100%;
-    }
-
-    .question {
-      background: #fff;
-      padding: 1.2rem;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      margin-bottom: 2rem;
-      font-size: 18px;
-    }
-
-    .question p {
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-      font-size: 16px;
-    }
-
-    .question label {
-      display: block;
-      margin: 12px 0 0 0;
-      font-size: 17px;
-      padding-left: 8px;
-      min-height: 44px;
-    }
-
-    .question input[type="radio"] {
-      width: 22px;
-      height: 22px;
-      margin-right: 10px;
-      accent-color: #1565c0;
-    }
-
-    button {
-      padding: 16px 28px;
-      background-color: #1565c0;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 1rem;
-      font-size: 18px;
-      min-height: 48px;
-      min-width: 44px;
-      box-shadow: 0 2px 6px rgba(21,101,192,0.08);
-      transition: background 0.2s;
-    }
-
-    button:hover, button:active {
-      background-color: #0d47a1;
-    }
-
-    #result {
-      font-weight: bold;
-      margin-top: 20px;
-      font-size: 18px;
-    }
-
-    @media (max-width: 600px) {
-      body {
-        padding: 8px;
-      }
-
-      h2 {
-        font-size: 19px;
-      }
-
-      .question {
-        padding: 0.7rem;
-        font-size: 16px;
-      }
-
-      .question p {
-        font-size: 16px;
-      }
-
-      .question label {
-        font-size: 16px;
-        min-height: 44px;
-      }
-
-      button {
-        width: 100%;
-        font-size: 17px;
-        padding: 14px;
-        min-height: 48px;
-      }
-
-      #result {
-        font-size: 15px;
-        text-align: center;
-      }
+    .card-shadow {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
-<body>
-  <h2 id="moduleTitle">Module Viewer</h2>
-
-  <!-- PDF Viewer -->
-  <div id="pdfContainer">
-    <div style="background: white; padding: 1rem; border-radius: 8px; margin-bottom: 20px; text-align: center;">
-      <h3>📖 Module Content</h3>
-      <p>Click the button below to open the module PDF in a new tab:</p>
-      <button id="openPdfBtn" type="button" style="background: #1565c0; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">
-        📄 Open Module PDF
-      </button>
+<body class="bg-gray-50 min-h-screen">
+  <header class="gradient-bg shadow-lg">
+    <div class="max-w-xl mx-auto px-4 py-6 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+          <span class="text-2xl">📖</span>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-white">Module Viewer</h1>
+        </div>
+      </div>
     </div>
-  </div>
-
-  <!-- Quiz Form -->
-  <form id="quizForm">
-    <div id="questionsContainer"></div>
-    <button type="submit">✅ Submit Answers</button>
-    <div id="result"></div>
-  </form>
-
+  </header>
+  <main class="max-w-2xl mx-auto mt-10 p-8 bg-white rounded-xl card-shadow">
+    <h2 class="text-2xl font-bold text-blue-700 mb-6 text-center">Module Details</h2>
+    <div class="module-content" id="moduleContent">
+      <!-- Module content will be loaded here -->
+    </div>
+    <div class="flex justify-between mt-6">
+      <a href="dashboard.html" class="text-blue-600 hover:underline">⬅ Back to Dashboard</a>
+    </div>
+  </main>
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const moduleId = urlParams.get("id");
-    const studentLRN = localStorage.getItem("studentLRN");
-
-    if (!moduleId || !studentLRN) {
-      alert("Missing module ID or student LRN.");
-      location.href = "dashboard.html";
-    }
-
-    async function loadModule() {
-      const res = await fetch("/tms/remediation-web/api/modules.php");
-      const modules = await res.json();
-      const currentQuarter = modules.find(m => m.id == moduleId)?.quarter;
-      const quarterModules = modules.filter(m => m.quarter === currentQuarter);
-      const moduleIndex = quarterModules.findIndex(m => m.id == moduleId) + 1;
-      const module = modules.find(m => m.id == moduleId);
-
-      if (!module) {
-        alert("Module not found.");
+    // Example: Load module content dynamically
+    document.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search);
+      const moduleId = params.get("id");
+      if (!moduleId) {
+        document.getElementById("moduleContent").textContent = "Module not found.";
         return;
       }
-
-      document.getElementById("moduleTitle").textContent = `${module.quarter} - Module ${moduleIndex}`;
-
-      // Set up PDF button to open in new tab
-      const pdfUrl = `/tms/remediation-web/public/MODULES/${module.filename}`;
-      document.getElementById("openPdfBtn").onclick = function() {
-        window.open(pdfUrl, '_blank');
-      };
-
-      const container = document.getElementById("questionsContainer");
-      container.innerHTML = "";
-
-      module.questions.forEach((q, index) => {
-        const block = document.createElement("div");
-        block.className = "question";
-
-        let html = `<p>${index + 1}. ${q.question}</p>`;
-        q.choices.forEach(choice => {
-          html += `
-            <label>
-              <input type="radio" name="q${index}" value="${choice}"> ${choice}
-            </label>
-          `;
-        });
-
-        block.innerHTML = html;
-        container.appendChild(block);
-      });
-
-      document.getElementById("quizForm").addEventListener("submit", function (e) {
-        e.preventDefault();
-        let score = 0;
-
-        module.questions.forEach((q, index) => {
-          const selected = document.querySelector(`input[name="q${index}"]:checked`);
-          if (selected && selected.value.trim().toLowerCase() === q.answer.trim().toLowerCase()) {
-            score++;
+      fetch(`/tms/remediation-web/api/modules.php?id=${moduleId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.module) {
+            document.getElementById("moduleContent").innerHTML = `
+              <h3 class='text-lg font-bold text-blue-700 mb-2'>${data.module.title}</h3>
+              <p class='mb-2'>${data.module.description}</p>
+              <p class='text-sm text-gray-500'>Section: ${data.module.section}</p>
+            `;
+          } else {
+            document.getElementById("moduleContent").textContent = "Module not found.";
           }
         });
-
-        const passed = score / module.questions.length >= 0.8;
-        document.getElementById("result").textContent =
-          `You got ${score}/${module.questions.length}. ${passed ? "✅ Passed!" : "❌ Try again."}`;
-
-        fetch("/tms/remediation-web/api/update-progress.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lrn: studentLRN,
-            module: `module${module.id}`,
-            score: { score, passed }
-          })
-        });
-      });
-    }
-
-    loadModule();
+    });
   </script>
 </body>
 </html>

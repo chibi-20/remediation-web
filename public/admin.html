@@ -1,262 +1,255 @@
+
 <!DOCTYPE html>
 <html lang="tl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard - Student Progress</title>
-  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      background-color: #e3f2fd;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-
-    main {
-      max-width: 1000px;
-      margin: 2rem auto;
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      position: relative;
-    }
-
-    h1 {
-      text-align: center;
-      color: #1565c0;
-      margin-bottom: 1rem;
-    }
-
-    .top-bar {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 1rem;
-    }
-
-    .logout-btn {
-      background-color: #ef5350;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .logout-btn:hover {
-      background-color: #c62828;
-    }
-
-    .filter-bar {
-      margin-bottom: 1.5rem;
-      text-align: right;
-    }
-
-    .filter-bar input {
-      padding: 8px;
-      width: 250px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      padding: 0.75rem;
-      text-align: center;
-      border: 1px solid #ddd;
-    }
-
-    th {
-      background-color: #1976d2;
-      color: white;
-    }
-
-    .status-complete {
-      color: green;
-      font-weight: bold;
-    }
-
-    .status-pending {
-      color: red;
-      font-weight: bold;
-    }
-
-    .reset-btn {
-      background-color: #ef5350;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .reset-btn:hover {
-      background-color: #d32f2f;
-    }
-
-    .btn-create-module {
-      display: inline-block;
-      margin: 1rem 0;
-      background-color: #42a5f5;
-      color: white;
-      padding: 8px 16px;
-      text-decoration: none;
-      border-radius: 6px;
-    }
-
-    .btn-create-module:hover {
-      background-color: #1976d2;
-    }
-
-    #moduleList {
-      margin-top: 2rem;
-    }
-
-    .module-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #f0f8ff;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
-
-    .module-item button {
-      margin-left: 8px;
-      padding: 6px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .module-item button:first-child {
-      background-color: #ffb300;
-      color: black;
-    }
-
-    .module-item button:last-child {
-      background-color: #e53935;
-      color: white;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+    .hover-lift { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+    .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+    .status-badge { display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+    .status-complete { background-color: #dcfce7; color: #166534; }
+    .status-pending { background-color: #fef2f2; color: #dc2626; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+    .table-row:hover { background-color: #f8fafc; }
+    .module-card { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #0ea5e9; }
   </style>
 </head>
-<body>
-  <main>
-    <div class="top-bar">
-      <button class="logout-btn" onclick="logout()">Log Out</button>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Header -->
+  <header class="gradient-bg shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-6">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+            <span class="text-2xl">📚</span>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-white">Teacher's Dashboard</h1>
+            <p class="text-blue-100 text-sm">Student Progress Management</p>
+          </div>
+        </div>
+        <button class="logout-btn bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2" onclick="logout()">
+          <span>🚪</span>
+          <span>Log Out</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white rounded-xl card-shadow p-6 hover-lift">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">👥</span>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Total Students</p>
+            <p class="text-2xl font-bold text-gray-900" id="totalStudents">0</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl card-shadow p-6 hover-lift">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">✅</span>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Completed</p>
+            <p class="text-2xl font-bold text-green-600" id="completedCount">0</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl card-shadow p-6 hover-lift">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">📝</span>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Active Modules</p>
+            <p class="text-2xl font-bold text-orange-600" id="moduleCount">0</p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <h1>Student Module Progress</h1>
-
-    <div class="filter-bar">
-      <input type="text" id="searchInput" placeholder="Search by name, section, or LRN">
+    <!-- Controls Section -->
+    <div class="bg-white rounded-xl card-shadow p-6 mb-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div class="relative flex-1 max-w-md">
+          <svg class="search-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search by name, section, or LRN..." 
+            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+          >
+        </div>
+        <a href="admin-module-creator.html" class="btn-create-module bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2 hover-lift">
+          <span>➕</span>
+          <span>Create New Module</span>
+        </a>
+      </div>
     </div>
 
-    <a href="admin-module-creator.html" class="btn-create-module">➕ Create New Module</a>
+    <!-- Students Table -->
+    <div class="bg-white rounded-xl card-shadow overflow-hidden mb-8">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+          <span>👨‍🎓</span>
+          <span>Student Progress Overview</span>
+        </h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full" id="studentsTable">
+          <thead class="bg-gray-50" id="studentsTableHead">
+            <!-- Dynamic columns will be rendered here -->
+          </thead>
+          <tbody id="studentTableBody" class="bg-white divide-y divide-gray-200">
+            <!-- Dynamic student rows will be rendered here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Last Name</th>
-          <th>First Name</th>
-          <th>Grade & Section</th>
-          <th>LRN</th>
-        </tr>
-      </thead>
-      <tbody id="studentTableBody"></tbody>
-    </table>
-
-    <div id="adminModules">
-      <h2>🗂️ Created Modules</h2>
-      <div id="moduleList"></div>
+    <!-- Modules Section -->
+    <div class="bg-white rounded-xl card-shadow p-6">
+      <div class="flex items-center space-x-3 mb-6">
+        <span class="text-2xl">🗂️</span>
+        <h2 class="text-xl font-semibold text-gray-900">Created Modules</h2>
+      </div>
+      <div id="moduleList" class="space-y-4"></div>
     </div>
   </main>
 
   <script>
     const tableBody = document.getElementById("studentTableBody");
+    const tableHead = document.getElementById("studentsTableHead");
     const searchInput = document.getElementById("searchInput");
     let students = [];
     let modules = [];
+
+    function updateStats() {
+      document.getElementById('totalStudents').textContent = students.length;
+      let completed = 0;
+      students.forEach(s => {
+        let allPassed = true;
+        modules.forEach(mod => {
+          const key = `module${mod.id}`;
+          const progress = s.progress?.[key];
+          if (!progress?.passed) allPassed = false;
+        });
+        if (allPassed && modules.length) completed++;
+      });
+      document.getElementById('completedCount').textContent = completed;
+      document.getElementById('moduleCount').textContent = modules.length;
+    }
 
     async function fetchStudents() {
       const res = await fetch('/tms/remediation-web/api/students.php');
       students = await res.json();
       renderTable();
+      updateStats();
     }
 
     async function loadModules() {
       const res = await fetch("/tms/remediation-web/api/modules.php");
       modules = await res.json();
-      renderModuleHeaders();
       renderTable();
-      renderCreatedModules();
+      renderModules();
+      updateStats();
     }
 
-    function renderModuleHeaders() {
-      const headerRow = document.querySelector("thead tr");
-      while (headerRow.children.length > 4) headerRow.removeChild(headerRow.lastChild);
+    function renderTable() {
+      // Render table head
+      let headHtml = `<tr>
+        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Name</th>
+        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">First Name</th>
+        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade & Section</th>
+        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LRN</th>`;
       modules.forEach(mod => {
-        const th = document.createElement("th");
-        th.textContent = mod.lesson || `Module ${mod.id}`;
-        headerRow.appendChild(th);
+        headHtml += `<th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${mod.lesson || `Module ${mod.id}`}</th>`;
       });
-      const actionTh = document.createElement("th");
-      actionTh.textContent = "Action";
-      headerRow.appendChild(actionTh);
-    }
+      headHtml += `<th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr>`;
+      tableHead.innerHTML = headHtml;
 
-    function renderTable(filter = "") {
-      tableBody.innerHTML = "";
+      // Render table body
+      let bodyHtml = "";
       students.forEach(student => {
         const searchTarget = `${student.lastName} ${student.firstName} ${student.section} ${student.lrn}`.toLowerCase();
-        if (!searchTarget.includes(filter.toLowerCase())) return;
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${student.lastName}</td>
-          <td>${student.firstName}</td>
-          <td>${student.section}</td>
-          <td>${student.lrn}</td>
-        `;
-
+        if (searchInput.value && !searchTarget.includes(searchInput.value.toLowerCase())) return;
+        bodyHtml += `<tr class="table-row transition-colors duration-150">
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.lastName}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.firstName}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.section}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.lrn}</td>`;
         modules.forEach(mod => {
           const key = `module${mod.id}`;
-          const passed = student.progress?.[key]?.passed;
-          const td = document.createElement("td");
-          td.className = passed ? "status-complete" : "status-pending";
-          td.textContent = passed ? "✅" : "❌";
-          tr.appendChild(td);
+          const progress = student.progress?.[key];
+          const passed = progress?.passed;
+          const score = typeof progress === "object" && "score" in progress ? progress.score : (typeof progress === "number" ? progress : null);
+          bodyHtml += `<td class="px-6 py-4 whitespace-nowrap">
+            <span class="status-badge ${passed ? 'status-complete' : 'status-pending'}">
+              ${passed ? `✅ Complete<br><span class='text-xs text-gray-700'>Score: ${score ?? '-'}</span>` : '⏳ Pending'}
+            </span>
+          </td>`;
         });
-
-        const actionTd = document.createElement("td");
-        actionTd.innerHTML = `<button class="reset-btn" onclick="resetProgress(${student.id})">Reset</button>`;
-        tr.appendChild(actionTd);
-
-        tableBody.appendChild(tr);
+        bodyHtml += `<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <button class="text-blue-600 hover:text-blue-900 mr-3 transition-colors duration-150" onclick="viewStudent('${student.lrn}')">View</button>
+          <button class="reset-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs transition-colors duration-150" onclick="resetProgress(${student.id})">Reset</button>
+        </td></tr>`;
       });
+      tableBody.innerHTML = bodyHtml;
     }
 
-    function renderCreatedModules() {
-      const container = document.getElementById("moduleList");
-      container.innerHTML = "";
-      modules.forEach(mod => {
-        const div = document.createElement("div");
-        div.className = "module-item";
-        div.innerHTML = `
-          <span><strong>${mod.quarter}</strong> — ${mod.lesson || mod.filename}</span>
-          <div>
-            <button onclick="editModule(${mod.id})">✏️ Edit</button>
-            <button onclick="deleteModule(${mod.id})">🗑️ Delete</button>
+    function renderModules() {
+      if (!modules.length) return;
+      const moduleList = document.getElementById('moduleList');
+      moduleList.innerHTML = modules.map(mod => `
+        <div class="module-card p-4 rounded-lg hover-lift transition-all duration-200">
+          <div class="flex justify-between items-center">
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-900 mb-1">${mod.lesson || mod.filename}</h3>
+              <p class="text-sm text-gray-600">${mod.quarter ? `Quarter: ${mod.quarter}` : ''}</p>
+              <div class="flex items-center space-x-4 mt-2">
+                <span class="text-xs text-gray-500">📅 Created: ${mod.created_at ? mod.created_at.split('T')[0] : ''}</span>
+              </div>
+            </div>
+            <div class="flex space-x-2 ml-4">
+              <button class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150 flex items-center space-x-1" onclick="editModule(${mod.id})">
+                <span>✏️</span>
+                <span>Edit</span>
+              </button>
+              <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150 flex items-center space-x-1" onclick="deleteModule(${mod.id})">
+                <span>🗑️</span>
+                <span>Delete</span>
+              </button>
+            </div>
           </div>
-        `;
-        container.appendChild(div);
-      });
+        </div>
+      `).join('');
+    }
+
+    searchInput.addEventListener('input', renderTable);
+
+    function logout() {
+      localStorage.removeItem("isAdmin");
+      window.location.href = "login.html";
+    }
+
+    function viewStudent(lrn) {
+      alert('View details for student LRN: ' + lrn);
+      // Implement modal or redirect for detailed view if needed
     }
 
     async function resetProgress(id) {
@@ -283,13 +276,6 @@
         alert("❌ Delete failed.");
       }
     }
-
-    function logout() {
-      localStorage.removeItem("isAdmin");
-      window.location.href = "login.html";
-    }
-
-    searchInput.addEventListener("input", () => renderTable(searchInput.value));
 
     if (localStorage.getItem("isAdmin") !== "true") {
       alert("Access denied. Admins only.");
