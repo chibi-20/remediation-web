@@ -124,7 +124,7 @@ form.addEventListener("submit", async (e) => {
 
   if (result.success) {
     alert("✅ Module updated!");
-    window.location.href = "admin.html";
+    window.location.href = "teacher-dashboard.html";
   } else {
     alert("❌ Failed to update: " + result.error);
   }

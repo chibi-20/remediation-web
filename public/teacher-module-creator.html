@@ -124,7 +124,7 @@
     </form>
     <div id="error" class="mt-4 text-center text-red-500"></div>
     <div class="flex justify-between mt-6">
-      <a href="admin.html" class="text-blue-600 hover:underline">⬅ Back to Dashboard</a>
+      <a href="teacher-dashboard.html" class="text-blue-600 hover:underline">⬅ Back to Dashboard</a>
     </div>
   </main>
   <script>
@@ -267,7 +267,7 @@
         
         if (result.success) {
           alert('Module created successfully with assessment!');
-          window.location.href = 'admin.html';
+          window.location.href = 'teacher-dashboard.html';
         } else {
           errorDiv.textContent = '❌ ' + (result.error || 'Failed to create module');
         }

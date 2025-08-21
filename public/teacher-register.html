@@ -70,8 +70,8 @@
     </form>
     <div id="error" class="mt-4 text-center text-red-500"></div>
     <div class="flex justify-between mt-6">
-      <a href="admin-login.html" class="text-blue-600 hover:underline">⬅ Back to Teacher Login</a>
-      <a href="login.html" class="text-blue-600 hover:underline">⬅ Back to Student Login</a>
+      <a href="teacher-login.html" class="text-blue-600 hover:underline">⬅ Back to Teacher Login</a>
+      <a href="index.html" class="text-gray-600 hover:underline">🏠 Home</a>
     </div>
   </main>
   <script>
@@ -102,7 +102,7 @@
         console.log("Server response:", result);
         if (result.success) {
           alert("Registration successful! Redirecting to login...");
-          window.location.href = "admin-login.html";
+          window.location.href = "teacher-login.html";
         } else {
           errorDiv.textContent = "❌ " + result.error;
         }

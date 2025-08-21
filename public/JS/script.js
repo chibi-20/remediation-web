@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (currentPage === "admin-login.html") {
+  if (currentPage === "teacher-login.html") {
     const loginBtn = document.querySelector("button");
     loginBtn.addEventListener("click", () => {
       const username = document.getElementById("username").value.trim();
@@ -54,16 +54,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (username === "jayadmin" && password === "rosemarie2025") {
         localStorage.setItem("isAdmin", "true");
-        window.location.href = "admin.html";
+        window.location.href = "teacher-dashboard.html";
       } else {
         errorDiv.textContent = "Access denied. Admin only.";
       }
     });
   }
 
-  if (currentPage === "admin.html") {
+  if (currentPage === "teacher-dashboard.html") {
     if (localStorage.getItem("isAdmin") !== "true") {
-      window.location.href = "admin-login.html";
+      window.location.href = "teacher-login.html";
       return;
     }
 

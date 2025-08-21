@@ -78,10 +78,20 @@ class Database {
 }
 
 // Utility functions
-function jsonResponse($data, $statusCode = 200) {
+function jsonResponse($success, $message = '', $data = null, $statusCode = 200) {
     http_response_code($statusCode);
     header('Content-Type: application/json');
-    echo json_encode($data);
+    
+    $response = [
+        'success' => $success,
+        'message' => $message
+    ];
+    
+    if ($data !== null) {
+        $response['data'] = $data;
+    }
+    
+    echo json_encode($response);
     exit;
 }
 

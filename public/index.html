@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMS - Training Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 via-white to-blue-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-4xl">🎓</span>
+                </div>
+                <h1 class="text-4xl font-bold text-white mb-2">Training Management System</h1>
+                <p class="text-purple-100 text-lg">Empowering Education Through Technology</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- User Access Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <!-- Student Portal -->
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover">
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-6">
+                    <div class="text-center text-white">
+                        <div class="text-5xl mb-4">👨‍🎓</div>
+                        <h2 class="text-2xl font-bold mb-2">Student Portal</h2>
+                        <p class="opacity-90">Access your learning modules and track progress</p>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <a href="login.html" class="block w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-semibold text-center transition-colors">
+                            🔐 Student Login
+                        </a>
+                        <a href="register.html" class="block w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-6 rounded-xl font-semibold text-center transition-colors">
+                            📝 Create Student Account
+                        </a>
+                    </div>
+                    <div class="mt-6 text-sm text-gray-600">
+                        <h4 class="font-semibold mb-2">Features:</h4>
+                        <ul class="space-y-1">
+                            <li>• View assigned modules by quarter</li>
+                            <li>• Take quizzes and track scores</li>
+                            <li>• Monitor learning progress</li>
+                            <li>• Access modules from all your teachers</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teacher Portal -->
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover">
+                <div class="bg-gradient-to-r from-green-500 to-teal-600 p-6">
+                    <div class="text-center text-white">
+                        <div class="text-5xl mb-4">👨‍🏫</div>
+                        <h2 class="text-2xl font-bold mb-2">Teacher Portal</h2>
+                        <p class="opacity-90">Manage modules, students, and track progress</p>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <a href="teacher-login.html" class="block w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-xl font-semibold text-center transition-colors">
+                            🔐 Teacher Login
+                        </a>
+                        <a href="teacher-register.html" class="block w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-6 rounded-xl font-semibold text-center transition-colors">
+                            📝 Create Teacher Account
+                        </a>
+                    </div>
+                    <div class="mt-6 text-sm text-gray-600">
+                        <h4 class="font-semibold mb-2">Features:</h4>
+                        <ul class="space-y-1">
+                            <li>• Create and manage learning modules</li>
+                            <li>• Upload PDF materials and quizzes</li>
+                            <li>• Track student progress and scores</li>
+                            <li>• Manage teacher-section assignments</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Access (Only for system administrators) -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="bg-gradient-to-r from-red-500 to-pink-600 p-6">
+                <div class="text-center text-white">
+                    <div class="text-4xl mb-3">⚙️</div>
+                    <h2 class="text-xl font-bold mb-2">System Administration</h2>
+                    <p class="opacity-90 text-sm">Advanced management tools for system administrators</p>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="flex justify-center">
+                    <a href="admin-login.html" class="bg-red-100 hover:bg-red-200 text-red-800 py-3 px-6 rounded-lg font-medium text-center transition-colors">
+                        🛡️ System Admin
+                    </a>
+                </div>
+                <div class="mt-4 text-xs text-gray-500 text-center">
+                    * Requires admin login to access
+                </div>
+            </div>
+        </div>
+
+        <!-- System Information -->
+        <div class="mt-12 bg-white rounded-2xl shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">🚀 System Features</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="text-3xl mb-3">📚</div>
+                    <h3 class="font-semibold mb-2">Multi-Teacher Support</h3>
+                    <p class="text-sm text-gray-600">Students can access modules from all teachers assigned to their section</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl mb-3">🔒</div>
+                    <h3 class="font-semibold mb-2">Sequential Learning</h3>
+                    <p class="text-sm text-gray-600">Modules unlock progressively as students complete previous ones</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl mb-3">📱</div>
+                    <h3 class="font-semibold mb-2">Mobile Friendly</h3>
+                    <p class="text-sm text-gray-600">Optimized for use on smartphones, tablets, and desktops</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-16">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-300">© 2025 Training Management System. Built for educational excellence.</p>
+        </div>
+    </footer>
+</body>
+</html>

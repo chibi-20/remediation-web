@@ -17,11 +17,11 @@ if (strpos($path, $basePath) === 0) {
 switch ($path) {
     case '/':
     case '/index.php':
-        header('Location: public/login.html');
+        header('Location: public/index.html');
         exit;
         
     case '/admin':
-        header('Location: public/admin.html');
+        header('Location: public/teacher-dashboard.html');
         exit;
         
     // API Routes

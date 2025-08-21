@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - TMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .hover-lift {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .stat-card-red {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .stat-card-green {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .stat-card-orange {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">System Administrator</h1>
+                        <p class="text-sm text-gray-500">Training Management System</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="adminName" class="text-gray-700 font-medium">Admin</span>
+                    <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="stat-card text-white p-6 rounded-xl hover-lift">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm font-medium">Total Teachers</p>
+                        <p id="teacherCount" class="text-3xl font-bold">0</p>
+                    </div>
+                    <i class="fas fa-chalkboard-teacher text-4xl text-white/70"></i>
+                </div>
+            </div>
+            
+            <div class="stat-card-red text-white p-6 rounded-xl hover-lift">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm font-medium">Total Students</p>
+                        <p id="studentCount" class="text-3xl font-bold">0</p>
+                    </div>
+                    <i class="fas fa-user-graduate text-4xl text-white/70"></i>
+                </div>
+            </div>
+            
+            <div class="stat-card-green text-white p-6 rounded-xl hover-lift">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm font-medium">Total Modules</p>
+                        <p id="moduleCount" class="text-3xl font-bold">0</p>
+                    </div>
+                    <i class="fas fa-book text-4xl text-white/70"></i>
+                </div>
+            </div>
+            
+            <div class="stat-card-orange text-white p-6 rounded-xl hover-lift">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm font-medium">Active Sessions</p>
+                        <p id="sessionCount" class="text-3xl font-bold">0</p>
+                    </div>
+                    <i class="fas fa-users text-4xl text-white/70"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Management Cards -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Teacher Management -->
+            <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-chalkboard-teacher text-blue-600 mr-3"></i>
+                        Teacher Management
+                    </h2>
+                    <a href="teacher-sections.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-cog mr-2"></i>Manage Sections
+                    </a>
+                </div>
+                
+                <div id="teachersList" class="space-y-3 max-h-64 overflow-y-auto">
+                    <!-- Teachers will be loaded here -->
+                </div>
+                
+                <div class="mt-4 pt-4 border-t">
+                    <button onclick="showAddTeacherModal()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add New Teacher
+                    </button>
+                </div>
+            </div>
+
+            <!-- Student Management -->
+            <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-user-graduate text-green-600 mr-3"></i>
+                        Student Management
+                    </h2>
+                    <button onclick="exportStudents()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-download mr-2"></i>Export
+                    </button>
+                </div>
+                
+                <div id="studentsList" class="space-y-3 max-h-64 overflow-y-auto">
+                    <!-- Students will be loaded here -->
+                </div>
+                
+                <div class="mt-4 pt-4 border-t">
+                    <button onclick="showAddStudentModal()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add New Student
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <i class="fas fa-bolt text-yellow-600 mr-3"></i>
+                Quick Actions
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <a href="teacher-sections.html" class="bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                    <i class="fas fa-users-cog mr-2"></i>Teacher Sections
+                </a>
+                
+                <button onclick="viewSystemLogs()" class="bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                    <i class="fas fa-list-alt mr-2"></i>System Logs
+                </button>
+                
+                <button onclick="backupDatabase()" class="bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                    <i class="fas fa-database mr-2"></i>Backup Database
+                </button>
+                
+                <button onclick="systemSettings()" class="bg-orange-600 hover:bg-orange-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                    <i class="fas fa-cogs mr-2"></i>System Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Teacher Modal -->
+    <div id="addTeacherModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold mb-4">Add New Teacher</h3>
+            <form id="addTeacherForm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <input type="text" id="teacherName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="e.g. Juan Dela Cruz">
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Grade Level</label>
+                            <select id="teacherGrade" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="">Select grade</option>
+                                <option value="7">Grade 7</option>
+                                <option value="8">Grade 8</option>
+                                <option value="9">Grade 9</option>
+                                <option value="10">Grade 10</option>
+                                <option value="11">Grade 11</option>
+                                <option value="12">Grade 12</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                            <input type="text" id="teacherSubject" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="e.g. Araling Panlipunan">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Sections Taught <span class="text-xs text-gray-400">(comma separated)</span></label>
+                        <input type="text" id="teacherSections" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="e.g. 10-A, 10-B, 10-C">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <input type="text" id="teacherUsername" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="teacherPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
+                        <input type="email" id="teacherEmail" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="flex space-x-3 mt-6">
+                    <button type="button" onclick="closeAddTeacherModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">Add Teacher</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold mb-4">Add New Student</h3>
+            <form id="addStudentForm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                        <input type="text" id="studentLastName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                        <input type="text" id="studentFirstName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Middle Initial</label>
+                        <input type="text" id="studentMiddleInitial" maxlength="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Grade</label>
+                            <select id="studentGrade" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                                <option value="">-- Select Grade --</option>
+                                <option value="7">Grade 7</option>
+                                <option value="8">Grade 8</option>
+                                <option value="9">Grade 9</option>
+                                <option value="10">Grade 10</option>
+                                <option value="11">Grade 11</option>
+                                <option value="12">Grade 12</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                            <select id="studentSection" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                                <option value="">-- Select Section --</option>
+                                <option value="A">Section A</option>
+                                <option value="B">Section B</option>
+                                <option value="C">Section C</option>
+                                <option value="D">Section D</option>
+                                <option value="E">Section E</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Teacher</label>
+                        <select id="studentTeacher" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            <option value="">-- Select Teacher --</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">LRN (Learner Reference Number)</label>
+                        <input type="text" id="studentLRN" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="studentPassword" required minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+                <div class="flex space-x-3 mt-6">
+                    <button type="button" onclick="closeAddStudentModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors">Add Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/admin-dashboard.js"></script>
+</body>
+</html>

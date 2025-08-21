@@ -7,27 +7,126 @@
   <title>Student Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; }
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .card-shadow {
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    .module-card {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      transition: all 0.3s ease;
+    }
+    .module-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    .module-card.completed {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    .module-card.locked {
+      background: linear-gradient(135deg, #e2e2e2 0%, #c9c9c9 100%);
+      opacity: 0.6;
+    }
+    .progress-ring {
+      transform: rotate(-90deg);
+    }
+    .progress-ring-fill {
+      transition: stroke-dashoffset 0.35s;
+    }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-  <header class="gradient-bg shadow-lg">
-    <div class="max-w-xl mx-auto px-4 py-6 flex justify-between items-center">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-          <span class="text-2xl">📚</span>
+<body class="bg-gradient-to-br from-purple-50 via-white to-blue-50 min-h-screen">
+  <!-- Header -->
+  <header class="gradient-bg shadow-2xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 bg-white bg-opacity-20 backdrop-blur-lg rounded-xl flex items-center justify-center">
+            <span class="text-2xl">🎓</span>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-white">Learning Dashboard</h1>
+            <p class="text-purple-100 text-sm" id="studentName">Welcome back!</p>
+          </div>
         </div>
-        <div>
-          <h1 class="text-xl font-bold text-white">Student Dashboard</h1>
+        <div class="flex items-center space-x-4">
+          <div class="text-white text-right">
+            <p class="text-sm opacity-75">LRN</p>
+            <p class="font-semibold" id="studentLRN">-</p>
+          </div>
+          <a href="login.html" class="bg-white bg-opacity-20 backdrop-blur-lg hover:bg-opacity-30 text-white px-6 py-2 rounded-xl font-medium transition-all duration-200 border border-white border-opacity-20">
+            Logout
+          </a>
         </div>
       </div>
-      <a href="login.html" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200">Logout</a>
     </div>
   </header>
-  <main class="max-w-2xl mx-auto mt-10 p-8 bg-white rounded-xl card-shadow">
-    <h2 class="text-2xl font-bold text-blue-700 mb-6 text-center">Your Modules</h2>
-    <div id="modulesContainer"></div>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-2xl p-6 card-shadow">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <span class="text-2xl">📚</span>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm text-gray-600">Total Modules</p>
+            <p class="text-2xl font-bold text-gray-900" id="totalModules">0</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-6 card-shadow">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+            <span class="text-2xl">✅</span>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm text-gray-600">Completed</p>
+            <p class="text-2xl font-bold text-gray-900" id="completedModules">0</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-6 card-shadow">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+            <span class="text-2xl">📊</span>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm text-gray-600">Progress</p>
+            <p class="text-2xl font-bold text-gray-900" id="progressPercentage">0%</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-6 card-shadow">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+            <span class="text-2xl">🏆</span>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm text-gray-600">Avg. Score</p>
+            <p class="text-2xl font-bold text-gray-900" id="averageScore">0%</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modules Section -->
+    <div class="bg-white rounded-2xl card-shadow overflow-hidden">
+      <div class="px-8 py-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100">
+        <h2 class="text-2xl font-bold text-gray-900">📖 Your Learning Modules</h2>
+        <p class="text-gray-600 mt-1">Complete modules to unlock the next ones</p>
+      </div>
+      <div class="p-8">
+        <div id="modulesContainer" class="space-y-8">
+          <!-- Modules will be loaded here -->
+        </div>
+      </div>
+    </div>
   </main>
   <script>
     const lrn = localStorage.getItem("studentLRN");
@@ -35,19 +134,33 @@
       alert("Missing student LRN. Please log in again.");
       window.location.href = "login.html";
     }
+
+    // Update student info in header
+    document.getElementById("studentLRN").textContent = lrn;
+
     async function loadDashboard() {
       try {
-        const [studentsRes, modulesRes] = await Promise.all([
-          fetch("/tms/remediation-web/api/students.php"),
-          fetch("/tms/remediation-web/api/modules.php")
-        ]);
-        const students = await studentsRes.json();
-        const modules = await modulesRes.json();
-        const student = students.find(s => s.lrn === lrn);
+        // Use new API that gets modules from all section teachers
+        const res = await fetch(`/tms/remediation-web/api/student-modules.php?lrn=${lrn}`);
+        const data = await res.json();
+        
+        if (!data.success) {
+          alert(data.error || "Failed to load data.");
+          return;
+        }
+        
+        const student = data.student;
+        const modules = data.modules;
+        
         if (!student) {
           alert("Student not found.");
           return;
         }
+
+        // Update student name in header
+        document.getElementById("studentName").textContent = `Welcome back, ${student.firstName}!`;
+
+        // Parse progress
         let progress = {};
         if (typeof student.progress === 'string') {
           try {
@@ -58,51 +171,140 @@
         } else {
           progress = student.progress || {};
         }
+
+        // Calculate statistics
+        const totalModules = modules.length;
+        let completedModules = 0;
+        let totalScore = 0;
+        let scoredModules = 0;
+
+        modules.forEach(mod => {
+          const moduleKey = `module${mod.id}`;
+          const moduleProgress = progress[moduleKey];
+          if (moduleProgress?.passed === true) {
+            completedModules++;
+          }
+          if (moduleProgress?.score) {
+            totalScore += (moduleProgress.score / mod.questions.length) * 100;
+            scoredModules++;
+          }
+        });
+
+        const progressPercentage = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
+        const averageScore = scoredModules > 0 ? Math.round(totalScore / scoredModules) : 0;
+
+        // Update stats
+        document.getElementById("totalModules").textContent = totalModules;
+        document.getElementById("completedModules").textContent = completedModules;
+        document.getElementById("progressPercentage").textContent = progressPercentage + "%";
+        document.getElementById("averageScore").textContent = averageScore + "%";
+
+        // Render modules
         const container = document.getElementById("modulesContainer");
         container.innerHTML = "";
         const quarters = ["Q1", "Q2", "Q3", "Q4"];
         let unlocked = true;
+
         quarters.forEach(quarter => {
-          const quarterHeader = document.createElement("h2");
-          quarterHeader.textContent = quarter;
-          quarterHeader.className = "text-lg font-semibold text-blue-700 mt-8 mb-2";
-          container.appendChild(quarterHeader);
-          const quarterModules = modules.filter(
-            mod => mod.quarter === quarter && mod.admin_id == student.admin_id
-          );
-          if (quarterModules.length === 0) {
-            const noModules = document.createElement("p");
-            noModules.textContent = `No modules available for ${quarter}.`;
-            container.appendChild(noModules);
-          }
+          const quarterModules = modules.filter(mod => mod.quarter === quarter);
+          
+          if (quarterModules.length === 0) return;
+
+          // Quarter header
+          const quarterSection = document.createElement("div");
+          quarterSection.className = "mb-8";
+          
+          const quarterHeader = document.createElement("h3");
+          quarterHeader.textContent = `📅 ${quarter}`;
+          quarterHeader.className = "text-xl font-bold text-gray-800 mb-4 flex items-center gap-2";
+          quarterSection.appendChild(quarterHeader);
+
+          // Modules grid
+          const modulesGrid = document.createElement("div");
+          modulesGrid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
+          
           quarterModules.forEach(mod => {
             const moduleKey = `module${mod.id}`;
-            const score = progress[moduleKey]?.score || 0;
-            const passed = progress[moduleKey]?.passed;
+            const moduleProgress = progress[moduleKey];
+            const score = moduleProgress?.score || 0;
+            const passed = moduleProgress?.passed;
+            const isCompleted = passed === true;
+            const isAttempted = score > 0;
+
             const card = document.createElement("div");
-            card.className = "bg-blue-50 rounded-lg p-6 mb-4 shadow hover:shadow-lg transition-all" + (!unlocked ? " opacity-60" : "");
-            let icon = "📘";
+            
+            // Card styling based on status
+            let cardClass = "module-card rounded-2xl p-6 text-white relative overflow-hidden";
+            let statusIcon = "📘";
+            let statusText = "Start Module";
+            let statusClass = "bg-white bg-opacity-20 hover:bg-opacity-30";
+
             if (!unlocked) {
-              icon = "🔒";
-            } else if (passed === true) {
-              icon = "✅";
-            } else if (score > 0 && passed === false) {
-              icon = "❌";
+              cardClass += " locked";
+              statusIcon = "�";
+              statusText = "Locked";
+              statusClass = "bg-gray-500 cursor-not-allowed";
+            } else if (isCompleted) {
+              cardClass += " completed";
+              statusIcon = "✅";
+              statusText = "Completed";
+              statusClass = "bg-white bg-opacity-20 hover:bg-opacity-30";
+            } else if (isAttempted) {
+              statusIcon = "🔄";
+              statusText = "Continue";
             }
-            card.innerHTML = `<h3 class='font-bold text-blue-800 mb-2 flex items-center gap-2'>${icon} ${mod.lesson || `Module ${mod.id}`}</h3>`;
-            if (unlocked) {
-              card.innerHTML += `<a href='module-viewer.html?id=${mod.id}' class='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 inline-block mt-2'>Start Module</a>`;
-            } else {
-              card.innerHTML += `<span class='bg-red-100 text-red-700 px-3 py-1 rounded-lg font-semibold inline-block mt-2'>🔒 Locked</span>`;
-            }
-            if (progress[moduleKey] && passed !== true) unlocked = false;
-            container.appendChild(card);
+
+            card.className = cardClass;
+            
+            // Score percentage for completed/attempted modules
+            const scorePercentage = mod.questions.length > 0 ? Math.round((score / mod.questions.length) * 100) : 0;
+
+            card.innerHTML = `
+              <div class="absolute top-4 right-4 text-2xl">${statusIcon}</div>
+              <div class="mb-4">
+                <h4 class="text-lg font-bold mb-2">${mod.lesson || `Module ${mod.id}`}</h4>
+                <p class="text-sm opacity-90 mb-2">👨‍🏫 ${mod.teacher_name}</p>
+                ${isAttempted ? `<p class="text-sm opacity-90">Score: ${scorePercentage}%</p>` : ''}
+              </div>
+              <div class="mt-auto">
+                ${unlocked ? 
+                  `<a href='module-viewer.html?id=${mod.id}' class='${statusClass} text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 inline-block border border-white border-opacity-20'>
+                    ${statusText}
+                  </a>` :
+                  `<button disabled class='${statusClass} text-white px-4 py-2 rounded-xl font-medium inline-block border border-white border-opacity-20'>
+                    ${statusText}
+                  </button>`
+                }
+              </div>
+            `;
+
+            modulesGrid.appendChild(card);
+
+            // Update unlocked status for next module
+            if (moduleProgress && passed !== true) unlocked = false;
           });
+
+          quarterSection.appendChild(modulesGrid);
+          container.appendChild(quarterSection);
         });
+
+        // Show message if no modules
+        if (modules.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-12">
+              <div class="text-6xl mb-4">📚</div>
+              <h3 class="text-xl font-semibold text-gray-800 mb-2">No modules available yet</h3>
+              <p class="text-gray-600">Your teachers haven't assigned any modules yet. Check back later!</p>
+            </div>
+          `;
+        }
+
       } catch (error) {
+        console.error("Dashboard loading error:", error);
         alert("Error loading dashboard. Check console for details.");
       }
     }
+
     loadDashboard();
   </script>
 </body>
