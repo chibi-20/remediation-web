@@ -1,5 +1,5 @@
 <?php
-// api/create-module.php - Create module endpoint
+// api/teacher-create-module.php - Create module endpoint for teachers
 require_once '../config.php';
 require_once '../secure-upload.php';
 require_once '../security-middleware.php';
@@ -9,41 +9,45 @@ SecurityMiddleware::checkUploadSecurity();
 
 header('Content-Type: application/json');
 
-// Check if admin is logged in
-requireLogin();
+// Check teacher authentication
+session_start();
+if (!isset($_SESSION['teacher_logged_in']) || !$_SESSION['teacher_logged_in'] || !isset($_SESSION['teacher_id'])) {
+    jsonResponse(false, 'Teacher authentication required', null, 401);
+}
+
+$teacherId = $_SESSION['teacher_id'];
 
 $title = sanitizeInput($_POST['title'] ?? '');
 $description = sanitizeInput($_POST['description'] ?? '');
 $sectionsJson = $_POST['sections'] ?? '';
 $passingScore = intval($_POST['passingScore'] ?? 75);
 $questions = $_POST['questions'] ?? '';
-$adminId = $_SESSION['admin_id'];
 
 // Parse sections array
 $sections = json_decode($sectionsJson, true);
 if (!$sections || !is_array($sections) || empty($sections)) {
-    jsonResponse(['success' => false, 'error' => 'At least one section must be selected']);
+    jsonResponse(false, 'At least one section must be selected');
 }
 
 // Validate required fields
 if (empty($title) || empty($description) || empty($questions)) {
-    jsonResponse(['success' => false, 'error' => 'Missing required fields']);
+    jsonResponse(false, 'Missing required fields');
 }
 
 // Validate questions JSON
 $questionsData = json_decode($questions, true);
 if (!$questionsData || count($questionsData) < 5) {
-    jsonResponse(['success' => false, 'error' => 'Minimum 5 questions required']);
+    jsonResponse(false, 'Minimum 5 questions required');
 }
 
 // Validate each question
 foreach ($questionsData as $q) {
     if (empty($q['question']) || empty($q['optionA']) || empty($q['optionB']) || 
         empty($q['optionC']) || empty($q['optionD']) || empty($q['correctAnswer'])) {
-        jsonResponse(['success' => false, 'error' => 'All question fields are required']);
+        jsonResponse(false, 'All question fields are required');
     }
     if (!in_array($q['correctAnswer'], ['A', 'B', 'C', 'D'])) {
-        jsonResponse(['success' => false, 'error' => 'Invalid correct answer option']);
+        jsonResponse(false, 'Invalid correct answer option');
     }
 }
 
@@ -52,14 +56,37 @@ $filename = null;
 try {
     $filename = SecureFileUpload::handleUpload('pdfFile', ['pdf']);
 } catch (Exception $e) {
-    jsonResponse(['success' => false, 'error' => 'File upload error: ' . $e->getMessage()]);
+    jsonResponse(false, 'File upload error: ' . $e->getMessage());
 }
 
 if (!$filename) {
-    jsonResponse(['success' => false, 'error' => 'PDF file is required']);
+    jsonResponse(false, 'PDF file is required');
 }
 
 try {
+    $db = new Database();
+    $pdo = $db->getConnection();
+    
+    // Get teacher's information to find their admin_id
+    $stmt = $pdo->prepare("SELECT username FROM teachers WHERE id = ?");
+    $stmt->execute([$teacherId]);
+    $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$teacher) {
+        jsonResponse(false, 'Teacher not found');
+    }
+    
+    // Find the corresponding admin_id for this teacher
+    $stmt = $pdo->prepare("SELECT id FROM admins WHERE username = ?");
+    $stmt->execute([$teacher['username']]);
+    $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$admin) {
+        jsonResponse(false, 'Teacher admin record not found');
+    }
+    
+    $adminId = $admin['id'];
+    
     // Check if modules table has new columns, if not add them
     $stmt = $pdo->query("SHOW COLUMNS FROM modules LIKE 'title'");
     if ($stmt->rowCount() == 0) {
@@ -90,7 +117,7 @@ try {
     $pdo->commit();
     
     $sectionsText = implode(', ', $sections);
-    jsonResponse(['success' => true, 'message' => "Module created successfully for sections: {$sectionsText}", 'modules' => $createdModules]);
+    jsonResponse(true, "Module created successfully for sections: {$sectionsText}", $createdModules);
     
 } catch (PDOException $e) {
     $pdo->rollBack();
@@ -98,6 +125,7 @@ try {
     if ($filename && file_exists($uploadDir . $filename)) {
         unlink($uploadDir . $filename);
     }
-    jsonResponse(['success' => false, 'error' => 'Database error: ' . $e->getMessage()], 500);
+    error_log("Error creating teacher module: " . $e->getMessage());
+    jsonResponse(false, 'Database error: ' . $e->getMessage(), null, 500);
 }
 ?>

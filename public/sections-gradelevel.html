@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade Levels & Sections Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .grade-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #3B82F6;
+        }
+        .grade-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .section-tag {
+            background: linear-gradient(45deg, #3B82F6, #1D4ED8);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            margin: 0.25rem;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .add-section-btn {
+            background: linear-gradient(45deg, #10B981, #059669);
+            transition: all 0.3s ease;
+        }
+        .add-section-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <a href="admin-dashboard.html" class="inline-flex items-center px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-lg transition-colors shadow-md">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Admin Dashboard
+                </a>
+                
+                <button id="addGradeBtn" class="add-section-btn text-white px-6 py-3 rounded-lg font-semibold shadow-lg">
+                    <span class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Add Grade Level
+                    </span>
+                </button>
+            </div>
+            
+            <div class="text-center mt-6">
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">🎓 Grade Levels & Sections</h1>
+                <p class="text-gray-600">Manage grade levels and their sections for teacher assignments</p>
+            </div>
+        </div>
+
+        <!-- Grade Levels Container -->
+        <div id="gradeLevelsContainer" class="space-y-6">
+            <!-- Grade levels will be loaded here -->
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading grade levels...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-12">
+            <div class="text-6xl mb-4">📚</div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">No Grade Levels Yet</h3>
+            <p class="text-gray-500 mb-6">Start by adding your first grade level to organize sections</p>
+            <button onclick="showAddGradeModal()" class="add-section-btn text-white px-6 py-3 rounded-lg font-semibold shadow-lg">
+                Add Your First Grade Level
+            </button>
+        </div>
+    </div>
+
+    <!-- Add Grade Level Modal -->
+    <div id="addGradeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">🎓 Add Grade Level</h3>
+                <button onclick="closeAddGradeModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="addGradeForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
+                    <select id="gradeLevel" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        <option value="">Select Grade Level</option>
+                        <option value="7">Grade 7</option>
+                        <option value="8">Grade 8</option>
+                        <option value="9">Grade 9</option>
+                        <option value="10">Grade 10</option>
+                        <option value="11">Grade 11</option>
+                        <option value="12">Grade 12</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeAddGradeModal()" class="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="add-section-btn text-white px-6 py-2 rounded-lg font-semibold">
+                        Add Grade Level
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Section Modal -->
+    <div id="addSectionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">📝 Add Section</h3>
+                <button onclick="closeAddSectionModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="addSectionForm" class="space-y-4">
+                <input type="hidden" id="sectionGradeLevel" value="">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Section Name</label>
+                    <input type="text" id="sectionName" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                           placeholder="e.g., EINSTEIN, NEWTON, DARWIN" required>
+                    <p class="text-sm text-gray-500 mt-1">Enter a unique section name for this grade level</p>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeAddSectionModal()" class="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="add-section-btn text-white px-6 py-2 rounded-lg font-semibold">
+                        Add Section
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let gradeLevels = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGradeLevels();
+            
+            // Event listeners
+            document.getElementById('addGradeBtn').addEventListener('click', showAddGradeModal);
+            document.getElementById('addGradeForm').addEventListener('submit', handleAddGrade);
+            document.getElementById('addSectionForm').addEventListener('submit', handleAddSection);
+        });
+
+        // Load grade levels and sections
+        async function loadGradeLevels() {
+            try {
+                const response = await fetch('/tms/remediation-web/api/grade-levels.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    gradeLevels = data.data || [];
+                    renderGradeLevels();
+                } else {
+                    console.error('Error loading grade levels:', data.message);
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showEmptyState();
+            }
+        }
+
+        // Render grade levels
+        function renderGradeLevels() {
+            const container = document.getElementById('gradeLevelsContainer');
+            const loadingState = document.getElementById('loadingState');
+            const emptyState = document.getElementById('emptyState');
+            
+            loadingState.style.display = 'none';
+            
+            if (gradeLevels.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            container.innerHTML = gradeLevels.map(grade => `
+                <div class="grade-card bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-800">📚 Grade ${grade.level}</h2>
+                        <div class="flex space-x-2">
+                            <button onclick="showAddSectionModal(${grade.level})" class="add-section-btn text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Add Section
+                                </span>
+                            </button>
+                            <button onclick="deleteGradeLevel(${grade.level})" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3">📋 Sections (${grade.sections ? grade.sections.length : 0})</h3>
+                        <div class="min-h-[60px] bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            ${grade.sections && grade.sections.length > 0 ? 
+                                grade.sections.map(section => `
+                                    <span class="section-tag">
+                                        ${section.name}
+                                        <button onclick="deleteSection(${grade.level}, '${section.name}')" class="ml-2 hover:text-red-200 transition-colors">
+                                            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </span>
+                                `).join('') 
+                                : '<p class="text-gray-500 italic">No sections added yet. Click "Add Section" to create the first section for this grade level.</p>'
+                            }
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Show empty state
+        function showEmptyState() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('emptyState').classList.remove('hidden');
+        }
+
+        // Modal functions
+        function showAddGradeModal() {
+            document.getElementById('addGradeModal').classList.remove('hidden');
+        }
+
+        function closeAddGradeModal() {
+            document.getElementById('addGradeModal').classList.add('hidden');
+            document.getElementById('addGradeForm').reset();
+        }
+
+        function showAddSectionModal(gradeLevel) {
+            document.getElementById('sectionGradeLevel').value = gradeLevel;
+            document.getElementById('addSectionModal').classList.remove('hidden');
+        }
+
+        function closeAddSectionModal() {
+            document.getElementById('addSectionModal').classList.add('hidden');
+            document.getElementById('addSectionForm').reset();
+        }
+
+        // Handle add grade
+        async function handleAddGrade(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const gradeLevel = formData.get('gradeLevel') || document.getElementById('gradeLevel').value;
+            
+            try {
+                const response = await fetch('/tms/remediation-web/api/grade-levels.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'add_grade',
+                        level: parseInt(gradeLevel)
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    closeAddGradeModal();
+                    loadGradeLevels();
+                    showNotification('Grade level added successfully!', 'success');
+                } else {
+                    showNotification(data.message || 'Failed to add grade level', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error adding grade level', 'error');
+            }
+        }
+
+        // Handle add section
+        async function handleAddSection(e) {
+            e.preventDefault();
+            
+            const gradeLevel = document.getElementById('sectionGradeLevel').value;
+            const sectionName = document.getElementById('sectionName').value.trim().toUpperCase();
+            
+            try {
+                const response = await fetch('/tms/remediation-web/api/grade-levels.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'add_section',
+                        level: parseInt(gradeLevel),
+                        section_name: sectionName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    closeAddSectionModal();
+                    loadGradeLevels();
+                    showNotification('Section added successfully!', 'success');
+                } else {
+                    showNotification(data.message || 'Failed to add section', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error adding section', 'error');
+            }
+        }
+
+        // Delete grade level
+        async function deleteGradeLevel(level) {
+            if (!confirm(`Are you sure you want to delete Grade ${level} and all its sections?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/tms/remediation-web/api/grade-levels.php', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'delete_grade',
+                        level: parseInt(level)
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadGradeLevels();
+                    showNotification('Grade level deleted successfully!', 'success');
+                } else {
+                    showNotification(data.message || 'Failed to delete grade level', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error deleting grade level', 'error');
+            }
+        }
+
+        // Delete section
+        async function deleteSection(level, sectionName) {
+            if (!confirm(`Are you sure you want to delete section "${sectionName}" from Grade ${level}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/tms/remediation-web/api/grade-levels.php', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'delete_section',
+                        level: parseInt(level),
+                        section_name: sectionName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadGradeLevels();
+                    showNotification('Section deleted successfully!', 'success');
+                } else {
+                    showNotification(data.message || 'Failed to delete section', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error deleting section', 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

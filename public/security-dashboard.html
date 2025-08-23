@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Dashboard - Remediation Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Security Dashboard</h1>
+            <div class="flex gap-4">
+                <button onclick="goBackToAdmin()" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Admin
+                </button>
+                <a href="admin-login.html" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    Admin Login
+                </a>
+                <button onclick="refreshAll()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                    Refresh Data
+                </button>
+            </div>
+        </div>
+        
+        <!-- Security Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Failed Logins (24h)</h3>
+                <p class="text-3xl font-bold text-red-600" id="failedLogins">-</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Rate Limit Violations</h3>
+                <p class="text-3xl font-bold text-orange-600" id="rateLimitViolations">-</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">File Upload Rejections</h3>
+                <p class="text-3xl font-bold text-yellow-600" id="uploadRejections">-</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Active Sessions</h3>
+                <p class="text-3xl font-bold text-green-600" id="activeSessions">-</p>
+            </div>
+        </div>
+        
+        <!-- Recent Security Events -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Recent Failed Login Attempts</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="text-left py-2">Time</th>
+                                <th class="text-left py-2">Type</th>
+                                <th class="text-left py-2">Username/LRN</th>
+                                <th class="text-left py-2">IP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="failedLoginsList">
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-gray-500">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Rate Limiting Events</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="text-left py-2">Time</th>
+                                <th class="text-left py-2">Type</th>
+                                <th class="text-left py-2">IP</th>
+                                <th class="text-left py-2">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rateLimitsList">
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-gray-500">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security Charts -->
+        <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Login Attempts (Last 7 Days)</h3>
+                <canvas id="loginChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Security Events Distribution</h3>
+                <canvas id="eventsChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        
+        <!-- IP Management -->
+        <div class="mt-8 bg-white rounded-lg shadow p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">IP Address Management</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-lg font-medium text-gray-700 mb-3">Add IP to Blacklist</h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="ipInput" placeholder="Enter IP address" 
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button onclick="addToBlacklist()" 
+                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                            Block IP
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-lg font-medium text-gray-700 mb-3">Blacklisted IPs</h4>
+                    <div id="blacklistedIPs" class="space-y-2 max-h-32 overflow-y-auto">
+                        <p class="text-gray-500">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check admin authentication
+            checkAuthenticationStatus();
+            
+            loadSecurityStats();
+            loadRecentEvents();
+            loadBlacklist();
+            initializeCharts();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                loadSecurityStats();
+                loadRecentEvents();
+            }, 30000);
+        });
+        
+        function checkAuthenticationStatus() {
+            const adminToken = localStorage.getItem('adminToken');
+            const adminUser = localStorage.getItem('adminUser');
+            
+            if (!adminToken || !adminUser) {
+                // Show warning but don't redirect since this might be opened directly
+                showError('Warning: Admin authentication not detected. Some features may not work properly.');
+                return false;
+            }
+            
+            try {
+                const admin = JSON.parse(adminUser);
+                // Update header if admin info is available
+                if (admin.username) {
+                    const headerText = document.querySelector('h1');
+                    if (headerText) {
+                        headerText.textContent = `Security Dashboard - ${admin.username}`;
+                    }
+                }
+                return true;
+            } catch (error) {
+                showError('Authentication data corrupted. Please login again.');
+                return false;
+            }
+        }
+        
+        async function loadSecurityStats() {
+            try {
+                const response = await fetch('../api/security-stats.php');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.stats) {
+                    document.getElementById('failedLogins').textContent = data.stats.failed_logins_24h || 0;
+                    document.getElementById('rateLimitViolations').textContent = data.stats.rate_limit_violations || 0;
+                    document.getElementById('uploadRejections').textContent = data.stats.upload_rejections || 0;
+                    document.getElementById('activeSessions').textContent = data.stats.active_sessions || 0;
+                } else {
+                    console.error('API Error:', data.error || 'Unknown error');
+                    showError('Failed to load security statistics: ' + (data.error || 'Unknown error'));
+                    // Set fallback values
+                    document.getElementById('failedLogins').textContent = '0';
+                    document.getElementById('rateLimitViolations').textContent = '0';
+                    document.getElementById('uploadRejections').textContent = '0';
+                    document.getElementById('activeSessions').textContent = '0';
+                }
+            } catch (error) {
+                console.error('Error loading security stats:', error);
+                showError('Failed to connect to security API: ' + error.message);
+                // Set fallback values
+                document.getElementById('failedLogins').textContent = '0';
+                document.getElementById('rateLimitViolations').textContent = '0';
+                document.getElementById('uploadRejections').textContent = '0';
+                document.getElementById('activeSessions').textContent = '0';
+            }
+        }
+        
+        async function loadRecentEvents() {
+            try {
+                const response = await fetch('../api/security-events.php');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateFailedLoginsList(data.failed_logins || []);
+                    updateRateLimitsList(data.rate_limits || []);
+                } else {
+                    console.error('API Error:', data.error || 'Unknown error');
+                    showError('Failed to load security events: ' + (data.error || 'Unknown error'));
+                    // Set fallback empty states
+                    updateFailedLoginsList([]);
+                    updateRateLimitsList([]);
+                }
+            } catch (error) {
+                console.error('Error loading security events:', error);
+                showError('Failed to connect to security events API: ' + error.message);
+                // Set fallback empty states
+                updateFailedLoginsList([]);
+                updateRateLimitsList([]);
+            }
+        }
+        
+        function updateFailedLoginsList(events) {
+            const tbody = document.getElementById('failedLoginsList');
+            if (events.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No recent failed logins</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = events.map(event => `
+                <tr class="border-b">
+                    <td class="py-2">${formatTime(event.timestamp)}</td>
+                    <td class="py-2">${event.type}</td>
+                    <td class="py-2">${event.username || event.lrn || 'N/A'}</td>
+                    <td class="py-2">${event.ip}</td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateRateLimitsList(events) {
+            const tbody = document.getElementById('rateLimitsList');
+            if (events.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No rate limit violations</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = events.map(event => `
+                <tr class="border-b">
+                    <td class="py-2">${formatTime(event.timestamp)}</td>
+                    <td class="py-2">${event.limit_type}</td>
+                    <td class="py-2">${event.ip}</td>
+                    <td class="py-2">
+                        <button onclick="blockIP('${event.ip}')" 
+                                class="text-red-600 hover:text-red-800 text-sm">
+                            Block IP
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function initializeCharts() {
+            // Login attempts chart
+            const loginCtx = document.getElementById('loginChart').getContext('2d');
+            new Chart(loginCtx, {
+                type: 'line',
+                data: {
+                    labels: ['6 days ago', '5 days ago', '4 days ago', '3 days ago', '2 days ago', 'Yesterday', 'Today'],
+                    datasets: [{
+                        label: 'Successful Logins',
+                        data: [12, 19, 15, 25, 22, 18, 24],
+                        borderColor: 'rgb(34, 197, 94)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Failed Logins',
+                        data: [2, 5, 3, 8, 4, 2, 6],
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Security events chart
+            const eventsCtx = document.getElementById('eventsChart').getContext('2d');
+            new Chart(eventsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Failed Logins', 'Rate Limits', 'Upload Rejections', 'Other'],
+                    datasets: [{
+                        data: [45, 12, 8, 5],
+                        backgroundColor: [
+                            'rgb(239, 68, 68)',
+                            'rgb(245, 158, 11)',
+                            'rgb(168, 85, 247)',
+                            'rgb(107, 114, 128)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        }
+        
+        async function addToBlacklist() {
+            const ip = document.getElementById('ipInput').value.trim();
+            if (!ip) return;
+            
+            try {
+                const response = await fetch('../api/manage-blacklist.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'add', ip: ip })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('ipInput').value = '';
+                    loadBlacklist();
+                    showSuccess('IP address added to blacklist');
+                } else {
+                    showError('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error adding IP to blacklist:', error);
+                showError('Error adding IP to blacklist');
+            }
+        }
+        
+        async function blockIP(ip) {
+            if (confirm(`Block IP address ${ip}?`)) {
+                try {
+                    const response = await fetch('../api/manage-blacklist.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ action: 'add', ip: ip })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        loadBlacklist();
+                        showSuccess('IP address blocked');
+                    } else {
+                        showError('Error: ' + data.error);
+                    }
+                } catch (error) {
+                    console.error('Error blocking IP:', error);
+                    showError('Error blocking IP address');
+                }
+            }
+        }
+        
+        async function loadBlacklist() {
+            try {
+                const response = await fetch('../api/manage-blacklist.php');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const blacklist = data.blacklist || [];
+                    const container = document.getElementById('blacklistedIPs');
+                    if (blacklist.length === 0) {
+                        container.innerHTML = '<p class="text-gray-500">No blacklisted IPs</p>';
+                    } else {
+                        container.innerHTML = blacklist.map(ip => `
+                            <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                <span class="font-mono text-sm">${ip}</span>
+                                <button onclick="removeFromBlacklist('${ip}')" 
+                                        class="text-red-600 hover:text-red-800 text-sm">
+                                    Remove
+                                </button>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    console.error('API Error:', data.error || 'Unknown error');
+                    showError('Failed to load blacklisted IPs: ' + (data.error || 'Unknown error'));
+                    const container = document.getElementById('blacklistedIPs');
+                    container.innerHTML = '<p class="text-red-500">Error loading blacklist</p>';
+                }
+            } catch (error) {
+                console.error('Error loading blacklist:', error);
+                showError('Failed to connect to blacklist API: ' + error.message);
+                const container = document.getElementById('blacklistedIPs');
+                container.innerHTML = '<p class="text-red-500">Error loading blacklist</p>';
+            }
+        }
+        
+        async function removeFromBlacklist(ip) {
+            if (confirm(`Remove ${ip} from blacklist?`)) {
+                try {
+                    const response = await fetch('../api/manage-blacklist.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ action: 'remove', ip: ip })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        loadBlacklist();
+                        showSuccess('IP address removed from blacklist');
+                    } else {
+                        showError('Error: ' + data.error);
+                    }
+                } catch (error) {
+                    console.error('Error removing IP from blacklist:', error);
+                    showError('Error removing IP from blacklist');
+                }
+            }
+        }
+        
+        function showError(message) {
+            // Create or update error notification
+            let errorDiv = document.getElementById('errorNotification');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.id = 'errorNotification';
+                errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50';
+                document.body.appendChild(errorDiv);
+            }
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                }
+            }, 5000);
+        }
+        
+        function showSuccess(message) {
+            // Create or update success notification
+            let successDiv = document.getElementById('successNotification');
+            if (!successDiv) {
+                successDiv = document.createElement('div');
+                successDiv.id = 'successNotification';
+                successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+                document.body.appendChild(successDiv);
+            }
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                if (successDiv) {
+                    successDiv.style.display = 'none';
+                }
+            }, 3000);
+        }
+        
+        function formatTime(timestamp) {
+            return new Date(timestamp).toLocaleTimeString();
+        }
+        
+        function refreshAll() {
+            loadSecurityStats();
+            loadRecentEvents();
+            loadBlacklist();
+        }
+        
+        function goBackToAdmin() {
+            // Check if this window was opened from admin dashboard
+            if (window.opener && !window.opener.closed) {
+                // Focus on the parent window and close this one
+                window.opener.focus();
+                window.close();
+            } else {
+                // Redirect to admin dashboard
+                window.location.href = 'admin-dashboard.html';
+            }
+        }
+    </script>
+</body>
+</html>

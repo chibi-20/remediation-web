@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+
+# Environment files (contain sensitive information)
+.env
+.env.local
+.env.production
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Backup files
+*.bak
+*.backup
+
+# Upload directory contents (but keep the directory)
+public/MODULES/*.pdf
+public/MODULES/*.doc
+public/MODULES/*.docx
+!public/MODULES/.gitkeep
+
+# Debug and test files
+debug/
+test/
+tests/
+*debug*.php
+*test*.php
+test-*.php
+debug-*.php
+*-debug.*
+*-test.*
+validate-config.php
+cleanup*.php
+enhanced-cleanup.php
+final-cleanup.php

@@ -1,5 +1,9 @@
 <?php
 require_once '../config.php';
+require_once '../security-middleware.php';
+
+// Apply login security checks
+SecurityMiddleware::checkLoginSecurity();
 
 header('Content-Type: application/json');
 
@@ -14,20 +18,31 @@ try {
     $username = trim($input['username']);
     $password = $input['password'];
     
-    $db = Database::getInstance();
+    $db = new Database();
+    $pdo = $db->getConnection();
     
     // Check in teachers table
-    $stmt = $db->prepare("SELECT * FROM teachers WHERE username = ?");
+    $stmt = $pdo->prepare("SELECT * FROM teachers WHERE username = ?");
     $stmt->execute([$username]);
     $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$teacher) {
+        SecurityMiddleware::logSecurityEvent('failed_login_attempt', [
+            'type' => 'teacher',
+            'username' => $username,
+            'reason' => 'invalid_username'
+        ]);
         jsonResponse(false, 'Invalid username or password');
         exit;
     }
     
     // Verify password
     if (!password_verify($password, $teacher['password'])) {
+        SecurityMiddleware::logSecurityEvent('failed_login_attempt', [
+            'type' => 'teacher',
+            'username' => $username,
+            'reason' => 'invalid_password'
+        ]);
         jsonResponse(false, 'Invalid username or password');
         exit;
     }
@@ -43,6 +58,16 @@ try {
     $_SESSION['teacher_name'] = $teacher['name'];
     $_SESSION['teacher_token'] = $token;
     
+    // Log successful login
+    SecurityMiddleware::logSecurityEvent('successful_login', [
+        'type' => 'teacher',
+        'username' => $username,
+        'user_id' => $teacher['id']
+    ]);
+    
+    // Record login request for rate limiting
+    RateLimiter::recordRequest('login');
+    
     jsonResponse(true, 'Login successful', [
         'token' => $token,
         'teacher' => [
@@ -50,7 +75,10 @@ try {
             'username' => $teacher['username'],
             'name' => $teacher['name'],
             'email' => $teacher['email'],
-            'subject' => $teacher['subject']
+            'grade' => $teacher['grade'],
+            'subject' => $teacher['subject'],
+            'advisory_section' => $teacher['advisory_section'],
+            'sections' => $teacher['sections']
         ]
     ]);
     

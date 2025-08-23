@@ -54,6 +54,14 @@
         </div>
         <div class="flex items-center space-x-4">
           <div class="text-white text-right">
+            <p class="text-sm opacity-75">Section</p>
+            <p class="font-semibold" id="studentSection">-</p>
+          </div>
+          <div class="text-white text-right">
+            <p class="text-sm opacity-75">Adviser</p>
+            <p class="font-semibold" id="studentAdviser">-</p>
+          </div>
+          <div class="text-white text-right">
             <p class="text-sm opacity-75">LRN</p>
             <p class="font-semibold" id="studentLRN">-</p>
           </div>
@@ -135,30 +143,36 @@
       window.location.href = "login.html";
     }
 
-    // Update student info in header
-    document.getElementById("studentLRN").textContent = lrn;
-
     async function loadDashboard() {
       try {
-        // Use new API that gets modules from all section teachers
-        const res = await fetch(`/tms/remediation-web/api/student-modules.php?lrn=${lrn}`);
+        // Use relative API path
+        const res = await fetch(`../api/student-modules.php?lrn=${lrn}`);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
         const data = await res.json();
         
         if (!data.success) {
-          alert(data.error || "Failed to load data.");
+          alert(data.message || "Failed to load data.");
           return;
         }
         
-        const student = data.student;
-        const modules = data.modules;
+        const student = data.data.student;
+        const modules = data.data.modules;
+        const adviser = data.data.adviser;
         
         if (!student) {
           alert("Student not found.");
           return;
         }
 
-        // Update student name in header
+        // Update student information in header
         document.getElementById("studentName").textContent = `Welcome back, ${student.firstName}!`;
+        document.getElementById("studentLRN").textContent = lrn;
+        document.getElementById("studentSection").textContent = student.section || '-';
+        document.getElementById("studentAdviser").textContent = adviser ? adviser.name : '-';
 
         // Parse progress
         let progress = {};
@@ -199,93 +213,227 @@
         document.getElementById("progressPercentage").textContent = progressPercentage + "%";
         document.getElementById("averageScore").textContent = averageScore + "%";
 
-        // Render modules
+        // Render modules grouped by subject and quarter
         const container = document.getElementById("modulesContainer");
         container.innerHTML = "";
-        const quarters = ["Q1", "Q2", "Q3", "Q4"];
+        
+        // Group modules by subject and quarter
+        const modulesBySubject = {};
+        modules.forEach(mod => {
+          const subject = mod.subject || 'General';
+          if (!modulesBySubject[subject]) {
+            modulesBySubject[subject] = {};
+          }
+          const quarter = mod.quarter || 'Q1';
+          if (!modulesBySubject[subject][quarter]) {
+            modulesBySubject[subject][quarter] = [];
+          }
+          modulesBySubject[subject][quarter].push(mod);
+        });
+
         let unlocked = true;
+        const subjectColors = {
+          'FILIPINO': 'from-yellow-500 to-orange-600',
+          'ENGLISH': 'from-red-500 to-pink-600',
+          'MATH': 'from-blue-500 to-purple-600',
+          'SCIENCE': 'from-green-500 to-teal-600',
+          'ARALING PANLIPUNAN': 'from-amber-500 to-red-600',
+          'EDUKASYON SA PAGPAPAKATAO': 'from-purple-500 to-indigo-600',
+          'TECHNOLOGY AND LIVELIHOOD': 'from-cyan-500 to-blue-600',
+          'MAPEH': 'from-pink-500 to-rose-600',
+          'RESEARCH (For Science Section Only)': 'from-slate-500 to-gray-600',
+          // Legacy mappings for backward compatibility
+          'Filipino': 'from-yellow-500 to-orange-600',
+          'English': 'from-red-500 to-pink-600',
+          'Mathematics': 'from-blue-500 to-purple-600',
+          'Math': 'from-blue-500 to-purple-600',
+          'Science': 'from-green-500 to-teal-600',
+          'Social Studies': 'from-amber-500 to-red-600',
+          'General': 'from-gray-500 to-slate-600'
+        };
 
-        quarters.forEach(quarter => {
-          const quarterModules = modules.filter(mod => mod.quarter === quarter);
+        // Define subject order
+        const subjectOrder = [
+          'FILIPINO',
+          'ENGLISH', 
+          'MATH',
+          'SCIENCE',
+          'ARALING PANLIPUNAN',
+          'EDUKASYON SA PAGPAPAKATAO',
+          'TECHNOLOGY AND LIVELIHOOD',
+          'MAPEH',
+          'RESEARCH (For Science Section Only)'
+        ];
+
+        // Sort subjects according to the specified order
+        const sortedSubjects = Object.keys(modulesBySubject).sort((a, b) => {
+          const indexA = subjectOrder.indexOf(a.toUpperCase());
+          const indexB = subjectOrder.indexOf(b.toUpperCase());
           
-          if (quarterModules.length === 0) return;
+          // If both subjects are in the order list, sort by their position
+          if (indexA !== -1 && indexB !== -1) {
+            return indexA - indexB;
+          }
+          // If only one is in the order list, it comes first
+          if (indexA !== -1) return -1;
+          if (indexB !== -1) return 1;
+          // If neither is in the order list, sort alphabetically
+          return a.localeCompare(b);
+        });
 
-          // Quarter header
-          const quarterSection = document.createElement("div");
-          quarterSection.className = "mb-8";
+        sortedSubjects.forEach(subject => {
+          const subjectData = modulesBySubject[subject];
+          const subjectColor = subjectColors[subject] || subjectColors['General'];
           
-          const quarterHeader = document.createElement("h3");
-          quarterHeader.textContent = `📅 ${quarter}`;
-          quarterHeader.className = "text-xl font-bold text-gray-800 mb-4 flex items-center gap-2";
-          quarterSection.appendChild(quarterHeader);
-
-          // Modules grid
-          const modulesGrid = document.createElement("div");
-          modulesGrid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
+          // Subject section
+          const subjectSection = document.createElement("div");
+          subjectSection.className = "mb-12";
           
-          quarterModules.forEach(mod => {
-            const moduleKey = `module${mod.id}`;
-            const moduleProgress = progress[moduleKey];
-            const score = moduleProgress?.score || 0;
-            const passed = moduleProgress?.passed;
-            const isCompleted = passed === true;
-            const isAttempted = score > 0;
-
-            const card = document.createElement("div");
-            
-            // Card styling based on status
-            let cardClass = "module-card rounded-2xl p-6 text-white relative overflow-hidden";
-            let statusIcon = "📘";
-            let statusText = "Start Module";
-            let statusClass = "bg-white bg-opacity-20 hover:bg-opacity-30";
-
-            if (!unlocked) {
-              cardClass += " locked";
-              statusIcon = "�";
-              statusText = "Locked";
-              statusClass = "bg-gray-500 cursor-not-allowed";
-            } else if (isCompleted) {
-              cardClass += " completed";
-              statusIcon = "✅";
-              statusText = "Completed";
-              statusClass = "bg-white bg-opacity-20 hover:bg-opacity-30";
-            } else if (isAttempted) {
-              statusIcon = "🔄";
-              statusText = "Continue";
-            }
-
-            card.className = cardClass;
-            
-            // Score percentage for completed/attempted modules
-            const scorePercentage = mod.questions.length > 0 ? Math.round((score / mod.questions.length) * 100) : 0;
-
-            card.innerHTML = `
-              <div class="absolute top-4 right-4 text-2xl">${statusIcon}</div>
-              <div class="mb-4">
-                <h4 class="text-lg font-bold mb-2">${mod.lesson || `Module ${mod.id}`}</h4>
-                <p class="text-sm opacity-90 mb-2">👨‍🏫 ${mod.teacher_name}</p>
-                ${isAttempted ? `<p class="text-sm opacity-90">Score: ${scorePercentage}%</p>` : ''}
+          // Subject header with gradient background
+          const subjectHeader = document.createElement("div");
+          subjectHeader.className = `bg-gradient-to-r ${subjectColor} rounded-2xl p-6 mb-6 shadow-xl`;
+          subjectHeader.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-2xl font-bold text-white mb-2">📚 ${subject}</h2>
+                <p class="text-white/80">Organized by quarter for better learning progression</p>
               </div>
-              <div class="mt-auto">
-                ${unlocked ? 
-                  `<a href='module-viewer.html?id=${mod.id}' class='${statusClass} text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 inline-block border border-white border-opacity-20'>
-                    ${statusText}
-                  </a>` :
-                  `<button disabled class='${statusClass} text-white px-4 py-2 rounded-xl font-medium inline-block border border-white border-opacity-20'>
-                    ${statusText}
-                  </button>`
-                }
+              <div class="text-4xl opacity-20">🎯</div>
+            </div>
+          `;
+          subjectSection.appendChild(subjectHeader);
+
+          // Quarters within this subject
+          const quarters = ["Q1", "Q2", "Q3", "Q4"];
+          quarters.forEach(quarter => {
+            const quarterModules = subjectData[quarter] || [];
+            
+            if (quarterModules.length === 0) return;
+
+            // Quarter subsection
+            const quarterDiv = document.createElement("div");
+            quarterDiv.className = "mb-8";
+            
+            // Quarter header with modern design
+            const quarterHeader = document.createElement("div");
+            quarterHeader.className = "flex items-center gap-3 mb-4 pl-4";
+            quarterHeader.innerHTML = `
+              <div class="w-12 h-12 bg-gradient-to-br ${subjectColor} rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
+                ${quarter}
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-800">${quarter} Modules</h3>
+                <p class="text-gray-600 text-sm">${quarterModules.length} module(s) available</p>
               </div>
             `;
+            quarterDiv.appendChild(quarterHeader);
 
-            modulesGrid.appendChild(card);
+            // Modules grid with enhanced design
+            const modulesGrid = document.createElement("div");
+            modulesGrid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pl-4";
+            
+            quarterModules.forEach(mod => {
+              const moduleKey = `module${mod.id}`;
+              const moduleProgress = progress[moduleKey];
+              const score = moduleProgress?.score || 0;
+              const passed = moduleProgress?.passed;
+              const isCompleted = passed === true;
+              const isAttempted = score > 0;
 
-            // Update unlocked status for next module
-            if (moduleProgress && passed !== true) unlocked = false;
+              const card = document.createElement("div");
+              
+              // Enhanced card styling with glassmorphism effect
+              let cardClass = "relative overflow-hidden rounded-2xl p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-2xl";
+              let statusIcon = "�";
+              let statusText = "Start Learning";
+              let gradientClass = `bg-gradient-to-br ${subjectColor}`;
+              let borderClass = "border border-white/20";
+
+              if (!unlocked) {
+                gradientClass = "bg-gradient-to-br from-gray-400 to-gray-600";
+                statusIcon = "🔒";
+                statusText = "Locked";
+                cardClass += " opacity-60 cursor-not-allowed hover:scale-100";
+              } else if (isCompleted) {
+                gradientClass = "bg-gradient-to-br from-emerald-500 to-teal-600";
+                statusIcon = "✨";
+                statusText = "Completed";
+                borderClass = "border border-emerald-300/30";
+              } else if (isAttempted) {
+                gradientClass = "bg-gradient-to-br from-amber-500 to-orange-600";
+                statusIcon = "⚡";
+                statusText = "Continue";
+                borderClass = "border border-amber-300/30";
+              }
+
+              card.className = `${cardClass} ${gradientClass} ${borderClass}`;
+              
+              // Score percentage for completed/attempted modules
+              const scorePercentage = mod.questions.length > 0 ? Math.round((score / mod.questions.length) * 100) : 0;
+
+              card.innerHTML = `
+                <!-- Decorative background pattern -->
+                <div class="absolute inset-0 opacity-10">
+                  <div class="absolute top-0 right-0 w-32 h-32 rounded-full bg-white transform translate-x-16 -translate-y-16"></div>
+                  <div class="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-white transform -translate-x-12 translate-y-12"></div>
+                </div>
+                
+                <!-- Status badge -->
+                <div class="absolute top-4 right-4 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-xl border border-white/30">
+                  ${statusIcon}
+                </div>
+                
+                <!-- Module content -->
+                <div class="relative z-10">
+                  <div class="mb-6">
+                    <h4 class="text-xl font-bold mb-3 leading-tight">${mod.title || `Module ${mod.id}`}</h4>
+                    <div class="flex items-center gap-2 mb-2">
+                      <div class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                        <span class="text-xs">👨‍🏫</span>
+                      </div>
+                      <p class="text-sm text-white/90">${mod.teacher_name}</p>
+                    </div>
+                    ${isAttempted ? `
+                      <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                          <span class="text-xs">📊</span>
+                        </div>
+                        <p class="text-sm text-white/90">Score: ${scorePercentage}%</p>
+                      </div>
+                    ` : ''}
+                  </div>
+                  
+                  <!-- Action button -->
+                  <div class="mt-auto">
+                    ${unlocked ? 
+                      `<a href='module-viewer.html?id=${mod.id}' class='w-full bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 inline-block text-center border border-white/30 hover:border-white/50 shadow-lg'>
+                        <span class="flex items-center justify-center gap-2">
+                          <span>${statusIcon}</span>
+                          <span>${statusText}</span>
+                        </span>
+                      </a>` :
+                      `<button disabled class='w-full bg-gray-500/50 text-white/60 px-6 py-3 rounded-xl font-semibold inline-block text-center border border-gray-400/30 cursor-not-allowed'>
+                        <span class="flex items-center justify-center gap-2">
+                          <span>${statusIcon}</span>
+                          <span>${statusText}</span>
+                        </span>
+                      </button>`
+                    }
+                  </div>
+                </div>
+              `;
+
+              modulesGrid.appendChild(card);
+
+              // Update unlocked status for next module
+              if (moduleProgress && passed !== true) unlocked = false;
+            });
+
+            quarterDiv.appendChild(modulesGrid);
+            subjectSection.appendChild(quarterDiv);
           });
 
-          quarterSection.appendChild(modulesGrid);
-          container.appendChild(quarterSection);
+          container.appendChild(subjectSection);
         });
 
         // Show message if no modules

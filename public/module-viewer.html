@@ -14,53 +14,549 @@
     .card-shadow {
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
+    .tab-active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .tab-inactive {
+      background: #f8fafc;
+      color: #64748b;
+    }
+    .pdf-container {
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .question-card {
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    .question-card:hover {
+      border-color: #667eea;
+      transform: translateY(-2px);
+    }
+    .option-button {
+      transition: all 0.2s ease;
+    }
+    .option-button:hover {
+      background-color: #667eea;
+      color: white;
+    }
+    .option-selected {
+      background-color: #667eea !important;
+      color: white !important;
+      border-color: #667eea !important;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
+  <!-- Header -->
   <header class="gradient-bg shadow-lg">
-    <div class="max-w-xl mx-auto px-4 py-6 flex justify-between items-center">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-          <span class="text-2xl">📖</span>
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
+            <span class="text-2xl">📖</span>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-white" id="moduleTitle">Loading Module...</h1>
+            <p class="text-white/80" id="moduleTeacher">Teacher: Loading...</p>
+          </div>
         </div>
-        <div>
-          <h1 class="text-xl font-bold text-white">Module Viewer</h1>
-        </div>
+        <a href="dashboard.html" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2">
+          <span>⬅</span>
+          <span>Back to Dashboard</span>
+        </a>
       </div>
     </div>
   </header>
-  <main class="max-w-2xl mx-auto mt-10 p-8 bg-white rounded-xl card-shadow">
-    <h2 class="text-2xl font-bold text-blue-700 mb-6 text-center">Module Details</h2>
-    <div class="module-content" id="moduleContent">
-      <!-- Module content will be loaded here -->
+
+  <main class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-12">
+      <div class="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+      <p class="text-gray-600">Loading module content...</p>
     </div>
-    <div class="flex justify-between mt-6">
-      <a href="dashboard.html" class="text-blue-600 hover:underline">⬅ Back to Dashboard</a>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="hidden">
+      <!-- Tab Navigation -->
+      <div class="bg-white rounded-xl card-shadow mb-6">
+        <div class="flex border-b border-gray-200">
+          <button id="studyTab" class="tab-active px-6 py-4 font-semibold rounded-tl-xl transition-all duration-200">
+            📚 Study Material
+          </button>
+          <button id="assessmentTab" class="tab-inactive px-6 py-4 font-semibold transition-all duration-200">
+            📝 Assessment
+          </button>
+        </div>
+      </div>
+
+      <!-- Study Material Tab -->
+      <div id="studyContent" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Module Info -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-xl card-shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">📋 Module Information</h2>
+            <div class="space-y-3">
+              <div>
+                <span class="text-sm font-medium text-gray-500">Title:</span>
+                <p id="moduleInfoTitle" class="text-gray-800">Loading...</p>
+              </div>
+              <div>
+                <span class="text-sm font-medium text-gray-500">Description:</span>
+                <p id="moduleInfoDescription" class="text-gray-800">Loading...</p>
+              </div>
+              <div>
+                <span class="text-sm font-medium text-gray-500">Section:</span>
+                <p id="moduleInfoSection" class="text-gray-800">Loading...</p>
+              </div>
+              <div>
+                <span class="text-sm font-medium text-gray-500">Passing Score:</span>
+                <p id="moduleInfoPassing" class="text-gray-800">Loading...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Card -->
+          <div id="progressCard" class="bg-white rounded-xl card-shadow p-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">📊 Your Progress</h3>
+            <div id="progressContent">
+              <p class="text-gray-600">Complete the assessment to see your progress.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PDF Viewer -->
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-xl card-shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-bold text-gray-800">📄 Study Material</h2>
+              <button id="openPdfBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-200">
+                🔗 Open in New Tab
+              </button>
+            </div>
+            <div id="pdfViewer" class="pdf-container" style="height: 600px;">
+              <div class="flex items-center justify-center h-full text-gray-500">
+                <div class="text-center">
+                  <div class="text-4xl mb-4">📄</div>
+                  <p>Loading PDF...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assessment Tab -->
+      <div id="assessmentContent" class="hidden">
+        <div class="bg-white rounded-xl card-shadow p-6">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-800">📝 Module Assessment</h2>
+              <p class="text-gray-600">Answer all questions to complete this module</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-gray-500">Passing Score</p>
+              <p id="assessmentPassing" class="text-xl font-bold text-blue-600">--</p>
+            </div>
+          </div>
+
+          <!-- Assessment Content -->
+          <div id="questionsContainer">
+            <p class="text-center text-gray-500 py-8">Loading assessment questions...</p>
+          </div>
+
+          <!-- Submit Button -->
+          <div id="submitSection" class="text-center mt-8 hidden">
+            <button id="submitAssessment" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg">
+              🎯 Submit Assessment
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div id="resultsModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-8 max-w-md mx-4 card-shadow">
+        <div class="text-center">
+          <div id="resultIcon" class="text-6xl mb-4">🎯</div>
+          <h3 id="resultTitle" class="text-2xl font-bold mb-2">Assessment Complete!</h3>
+          <p id="resultMessage" class="text-gray-600 mb-4">Great job on completing the module!</p>
+          <div id="resultScore" class="text-3xl font-bold mb-6 text-blue-600">85%</div>
+          
+          <!-- Dashboard redirect section for passed assessments -->
+          <div id="passedSection" class="hidden mb-4">
+            <p class="text-sm text-green-600 mb-2">🎉 Module completed successfully!</p>
+            <p class="text-xs text-gray-500 mb-4">Redirecting to dashboard in <span id="countdown">3</span> seconds...</p>
+          </div>
+          
+          <div class="flex gap-3 justify-center">
+            <button id="closeResults" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg">
+              Stay Here
+            </button>
+            <button id="dashboardBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg">
+              📚 Back to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
+
   <script>
-    // Example: Load module content dynamically
-    document.addEventListener("DOMContentLoaded", () => {
-      const params = new URLSearchParams(window.location.search);
-      const moduleId = params.get("id");
-      if (!moduleId) {
-        document.getElementById("moduleContent").textContent = "Module not found.";
+    let currentModule = null;
+    let currentStudent = null;
+    let studentAnswers = {};
+
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const moduleId = urlParams.get('id');
+    const studentLRN = localStorage.getItem('studentLRN'); // Fixed: was 'student_lrn'
+
+    // Debug information
+
+    console.log('- All localStorage keys:', Object.keys(localStorage));
+
+    if (!moduleId) {
+      alert('Module ID is required');
+      window.location.href = 'dashboard.html';
+    }
+
+    if (!studentLRN) {
+      alert('Student login required. Please log in first.');
+      window.location.href = 'login.html';
+    }
+
+    // Tab switching
+    document.getElementById('studyTab').addEventListener('click', () => switchTab('study'));
+    document.getElementById('assessmentTab').addEventListener('click', () => switchTab('assessment'));
+
+    function switchTab(tab) {
+      const studyTab = document.getElementById('studyTab');
+      const assessmentTab = document.getElementById('assessmentTab');
+      const studyContent = document.getElementById('studyContent');
+      const assessmentContent = document.getElementById('assessmentContent');
+
+      if (tab === 'study') {
+        studyTab.className = 'tab-active px-6 py-4 font-semibold rounded-tl-xl transition-all duration-200';
+        assessmentTab.className = 'tab-inactive px-6 py-4 font-semibold transition-all duration-200';
+        studyContent.classList.remove('hidden');
+        assessmentContent.classList.add('hidden');
+      } else {
+        studyTab.className = 'tab-inactive px-6 py-4 font-semibold transition-all duration-200';
+        assessmentTab.className = 'tab-active px-6 py-4 font-semibold rounded-tr-xl transition-all duration-200';
+        studyContent.classList.add('hidden');
+        assessmentContent.classList.remove('hidden');
+      }
+    }
+
+    // Load module data
+    async function loadModule() {
+      // Double-check that we have the required data
+      if (!studentLRN) {
+        alert('Student login session expired. Please log in again.');
+        window.location.href = 'login.html';
         return;
       }
-      fetch(`/tms/remediation-web/api/modules.php?id=${moduleId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.module) {
-            document.getElementById("moduleContent").innerHTML = `
-              <h3 class='text-lg font-bold text-blue-700 mb-2'>${data.module.title}</h3>
-              <p class='mb-2'>${data.module.description}</p>
-              <p class='text-sm text-gray-500'>Section: ${data.module.section}</p>
-            `;
-          } else {
-            document.getElementById("moduleContent").textContent = "Module not found.";
-          }
+
+      try {
+        const response = await fetch(`/tms/remediation-web/api/student-module-viewer.php?id=${moduleId}&lrn=${studentLRN}`);
+        const data = await response.json();
+
+        if (data.success) {
+          currentModule = data.data.module;
+          currentStudent = data.data.student;
+          displayModuleInfo();
+          loadPDF();
+          loadAssessment();
+          updateProgress();
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (error) {
+        alert('Error loading module: ' + error.message);
+        window.location.href = 'dashboard.html';
+      } finally {
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+      }
+    }
+
+    function displayModuleInfo() {
+      document.getElementById('moduleTitle').textContent = currentModule.title || 'Untitled Module';
+      document.getElementById('moduleTeacher').textContent = `Teacher: ${currentModule.teacher_name || 'Unknown'}`;
+      document.getElementById('moduleInfoTitle').textContent = currentModule.title || 'Untitled Module';
+      document.getElementById('moduleInfoDescription').textContent = currentModule.description || 'No description available';
+      document.getElementById('moduleInfoSection').textContent = currentModule.section || 'Unknown';
+      document.getElementById('moduleInfoPassing').textContent = `${currentModule.passing_score || 75}%`;
+      document.getElementById('assessmentPassing').textContent = `${currentModule.passing_score || 75}%`;
+    }
+
+    function loadPDF() {
+      const pdfViewer = document.getElementById('pdfViewer');
+      const openPdfBtn = document.getElementById('openPdfBtn');
+      
+      if (currentModule.filename) {
+        const directPdfUrl = `/tms/remediation-web/public/modules/${currentModule.filename}`;
+        
+        pdfViewer.innerHTML = `
+          <div class="flex items-center justify-center h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg">
+            <div class="text-center p-8">
+              <div class="w-24 h-24 mx-auto mb-6 bg-white rounded-full flex items-center justify-center shadow-lg">
+                <span class="text-4xl">📄</span>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-800 mb-4">Study Material</h3>
+              <p class="text-gray-600 mb-6">Click the button below to open your PDF study material</p>
+              <div class="space-y-3">
+                <a href="${directPdfUrl}" target="_blank" 
+                   class="block bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+                  � Open Study Material
+                </a>
+                <a href="${directPdfUrl}" download 
+                   class="block bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200">
+                  💾 Download PDF
+                </a>
+              </div>
+              <p class="text-sm text-gray-500 mt-4">📱 Opens in a new tab for better viewing experience</p>
+            </div>
+          </div>
+        `;
+        
+        openPdfBtn.onclick = () => window.open(directPdfUrl, '_blank');
+        
+      } else {
+        pdfViewer.innerHTML = `
+          <div class="flex items-center justify-center h-full text-gray-500 bg-gray-100 rounded-lg">
+            <div class="text-center p-8">
+              <div class="text-6xl mb-4 opacity-50">📄</div>
+              <h3 class="text-xl font-semibold text-gray-700 mb-2">No Study Material</h3>
+              <p class="text-gray-600">No PDF material is available for this module</p>
+            </div>
+          </div>
+        `;
+        openPdfBtn.style.display = 'none';
+      }
+    }
+
+    // Handle PDF loading success
+    window.handlePdfLoad = function() {
+      const fallback = document.getElementById('pdfFallback');
+      if (fallback) fallback.classList.add('hidden');
+    }
+
+    // Handle PDF loading error
+    window.handlePdfError = function() {
+      const iframe = document.getElementById('pdfFrame');
+      const fallback = document.getElementById('pdfFallback');
+      
+      if (iframe && fallback) {
+        iframe.style.display = 'none';
+        fallback.classList.remove('hidden');
+      }
+    }
+
+    function loadAssessment() {
+      const container = document.getElementById('questionsContainer');
+      const submitSection = document.getElementById('submitSection');
+      
+      if (!currentModule.questions || currentModule.questions.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12">
+            <div class="text-4xl mb-4">📝</div>
+            <p class="text-gray-600">No assessment questions available for this module.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let questionsHTML = '';
+      currentModule.questions.forEach((question, index) => {
+        questionsHTML += `
+          <div class="question-card bg-gray-50 rounded-xl p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-4">${index + 1}. ${question.question}</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              ${['A', 'B', 'C', 'D'].map(option => `
+                <button class="option-button text-left p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 transition-all duration-200" 
+                        onclick="selectAnswer(${index}, '${option}')">
+                  <span class="font-semibold">${option}.</span> ${question['option' + option]}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = questionsHTML;
+      submitSection.classList.remove('hidden');
+    }
+
+    function selectAnswer(questionIndex, option) {
+      // Remove previous selection
+      const questionCard = document.querySelectorAll('.question-card')[questionIndex];
+      questionCard.querySelectorAll('.option-button').forEach(btn => {
+        btn.classList.remove('option-selected');
+      });
+
+      // Add selection to clicked option
+      event.target.classList.add('option-selected');
+      studentAnswers[questionIndex] = option;
+    }
+
+    function updateProgress() {
+      const progressContent = document.getElementById('progressContent');
+      
+      // Check if student has existing progress for this module
+      if (currentStudent && currentStudent.progress) {
+        const progress = JSON.parse(currentStudent.progress);
+        const moduleKey = `module${moduleId}`;
+        const moduleProgress = progress[moduleKey];
+        
+        if (moduleProgress) {
+          updateProgressAfterSubmission(moduleProgress);
+          return;
+        }
+      }
+      
+      // Default state - no progress yet
+      progressContent.innerHTML = `
+        <div class="text-center">
+          <div class="text-2xl mb-2">📚</div>
+          <p class="text-gray-600">Study the material first, then take the assessment to track your progress.</p>
+        </div>
+      `;
+    }
+
+    // Submit assessment
+    document.getElementById('submitAssessment').addEventListener('click', async () => {
+      if (Object.keys(studentAnswers).length < currentModule.questions.length) {
+        alert('Please answer all questions before submitting.');
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitAssessment');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ Submitting...';
+
+      const submissionData = {
+        moduleId: parseInt(moduleId),
+        studentLRN: studentLRN,
+        answers: studentAnswers
+      };
+
+      try {
+        const response = await fetch('/tms/remediation-web/api/submit-assessment.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(submissionData)
         });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          showResults(data.data.percentage, data.data.passed, data.data);
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (error) {
+        alert('Error submitting assessment: ' + error.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🎯 Submit Assessment';
+      }
     });
+
+    function showResults(percentage, passed, resultData) {
+      const modal = document.getElementById('resultsModal');
+      const icon = document.getElementById('resultIcon');
+      const title = document.getElementById('resultTitle');
+      const message = document.getElementById('resultMessage');
+      const scoreElement = document.getElementById('resultScore');
+      const passedSection = document.getElementById('passedSection');
+      const closeButton = document.getElementById('closeResults');
+
+      icon.textContent = passed ? '🎉' : '📚';
+      title.textContent = passed ? 'Congratulations!' : 'Keep Studying!';
+      message.textContent = passed ? 
+        `You scored ${resultData.score}/${resultData.total} and passed the assessment!` : 
+        `You scored ${resultData.score}/${resultData.total}. You need ${resultData.passing_score}% to pass.`;
+      scoreElement.textContent = `${percentage}%`;
+      scoreElement.className = passed ? 
+        'text-3xl font-bold mb-6 text-green-600' : 
+        'text-3xl font-bold mb-6 text-orange-600';
+
+      // Show/hide passed section based on result
+      if (passed) {
+        passedSection.classList.remove('hidden');
+        closeButton.textContent = 'Stay Here';
+        
+        // Start countdown timer
+        let countdown = 3;
+        const countdownElement = document.getElementById('countdown');
+        const timer = setInterval(() => {
+          countdown--;
+          countdownElement.textContent = countdown;
+          
+          if (countdown <= 0) {
+            clearInterval(timer);
+            window.location.href = 'dashboard.html';
+          }
+        }, 1000);
+        
+        // Store timer reference to clear it if user clicks stay
+        modal.dataset.timerId = timer;
+      } else {
+        passedSection.classList.add('hidden');
+        closeButton.textContent = 'Continue Learning';
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      // Update progress display
+      updateProgressAfterSubmission(resultData);
+    }
+
+    function updateProgressAfterSubmission(resultData) {
+      const progressContent = document.getElementById('progressContent');
+      const statusIcon = resultData.passed ? '✅' : '📝';
+      const statusText = resultData.passed ? 'Completed' : 'In Progress';
+      const statusColor = resultData.passed ? 'text-green-600' : 'text-orange-600';
+      
+      progressContent.innerHTML = `
+        <div class="text-center">
+          <div class="text-3xl mb-3">${statusIcon}</div>
+          <h4 class="font-semibold ${statusColor} mb-2">${statusText}</h4>
+          <div class="text-2xl font-bold ${statusColor} mb-2">${resultData.percentage}%</div>
+          <p class="text-sm text-gray-600">Score: ${resultData.score}/${resultData.total}</p>
+          ${!resultData.passed ? '<p class="text-sm text-orange-600 mt-2">Study more and retake to pass</p>' : ''}
+        </div>
+      `;
+    }
+
+    document.getElementById('closeResults').addEventListener('click', () => {
+      const modal = document.getElementById('resultsModal');
+      
+      // Clear countdown timer if it exists
+      if (modal.dataset.timerId) {
+        clearInterval(parseInt(modal.dataset.timerId));
+        delete modal.dataset.timerId;
+      }
+      
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    });
+
+    // Dashboard button event handler
+    document.getElementById('dashboardBtn').addEventListener('click', () => {
+      window.location.href = 'dashboard.html';
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', loadModule);
   </script>
 </body>
 </html>

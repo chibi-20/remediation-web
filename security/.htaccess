@@ -1,0 +1,11 @@
+# Deny all direct access to security files
+deny from all
+
+# Prevent directory browsing
+Options -Indexes
+
+# Additional security
+<Files "*">
+    SetHandler none
+    SetHandler default-handler
+</Files>

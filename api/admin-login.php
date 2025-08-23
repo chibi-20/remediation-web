@@ -1,5 +1,9 @@
 <?php
 require_once '../config.php';
+require_once '../security-middleware.php';
+
+// Apply login security checks
+SecurityMiddleware::checkLoginSecurity();
 
 header('Content-Type: application/json');
 
@@ -25,6 +29,17 @@ try {
         $_SESSION['admin_username'] = $username;
         $_SESSION['admin_token'] = $token;
         
+        // Log successful login
+        SecurityMiddleware::logSecurityEvent('successful_login', [
+            'type' => 'admin',
+            'username' => $username,
+            'user_id' => 1,
+            'role' => 'super_admin'
+        ]);
+        
+        // Record login request for rate limiting
+        RateLimiter::recordRequest('login');
+        
         jsonResponse(true, 'Login successful', [
             'token' => $token,
             'admin' => [
@@ -37,18 +52,29 @@ try {
     }
     
     // Check in admins table for other admin accounts
-    $db = Database::getInstance();
-    $stmt = $db->prepare("SELECT * FROM admins WHERE username = ?");
+    $db = new Database();
+    $pdo = $db->getConnection();
+    $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ?");
     $stmt->execute([$username]);
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$admin) {
+        SecurityMiddleware::logSecurityEvent('failed_login_attempt', [
+            'type' => 'admin',
+            'username' => $username,
+            'reason' => 'invalid_username'
+        ]);
         jsonResponse(false, 'Invalid username or password');
         exit;
     }
     
     // Verify password
     if (!password_verify($password, $admin['password'])) {
+        SecurityMiddleware::logSecurityEvent('failed_login_attempt', [
+            'type' => 'admin',
+            'username' => $username,
+            'reason' => 'invalid_password'
+        ]);
         jsonResponse(false, 'Invalid username or password');
         exit;
     }
@@ -62,6 +88,16 @@ try {
     $_SESSION['admin_id'] = $admin['id'];
     $_SESSION['admin_username'] = $admin['username'];
     $_SESSION['admin_token'] = $token;
+    
+    // Log successful login
+    SecurityMiddleware::logSecurityEvent('successful_login', [
+        'type' => 'admin',
+        'username' => $username,
+        'user_id' => $admin['id']
+    ]);
+    
+    // Record login request for rate limiting
+    RateLimiter::recordRequest('login');
     
     jsonResponse(true, 'Login successful', [
         'token' => $token,

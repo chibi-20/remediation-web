@@ -5,53 +5,116 @@ require_once '../config.php';
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
 }
 
 $lrn = $_GET['lrn'] ?? '';
 
 if (!$lrn) {
-    jsonResponse(['success' => false, 'error' => 'LRN is required'], 400);
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'LRN is required']);
+    exit;
 }
 
 try {
+    $db = new Database();
+    $pdo = $db->getConnection();
+    
     // Get student information
     $stmt = $pdo->prepare("SELECT * FROM students WHERE lrn = ?");
     $stmt->execute([$lrn]);
     $student = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$student) {
-        jsonResponse(['success' => false, 'error' => 'Student not found'], 404);
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Student not found']);
+        exit;
     }
     
-    // Get all teachers assigned to this student's section
+    // Get modules for this student through multiple approaches:
+    // 1. From teachers assigned to student's section via teacher_sections
+    // 2. From student's direct teacher assignment
+    // 3. From any modules created specifically for student's section
+    
+    $allTeacherIds = [];
+    
+    // Approach 1: Get teachers assigned to this student's section via teacher_sections
     $stmt = $pdo->prepare("
         SELECT DISTINCT ts.admin_id 
         FROM teacher_sections ts 
         WHERE ts.section = ?
     ");
     $stmt->execute([$student['section']]);
-    $teacherIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $sectionTeacherIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $allTeacherIds = array_merge($allTeacherIds, $sectionTeacherIds);
     
-    // If no teachers found in teacher_sections, fallback to student's direct admin_id
-    if (empty($teacherIds) && $student['admin_id']) {
-        $teacherIds = [$student['admin_id']];
+    // Approach 2: Include the student's direct teacher_id
+    if ($student['teacher_id']) {
+        // Find the admin_id that corresponds to this teacher_id
+        $stmt = $pdo->prepare("SELECT id FROM admins WHERE username = (SELECT username FROM teachers WHERE id = ?)");
+        $stmt->execute([$student['teacher_id']]);
+        $teacherAdminId = $stmt->fetchColumn();
+        
+        if ($teacherAdminId) {
+            $allTeacherIds[] = $teacherAdminId;
+        }
     }
+    
+    // Approach 3: Get all teachers who have created modules for this section (direct section match)
+    $stmt = $pdo->prepare("
+        SELECT DISTINCT admin_id FROM modules 
+        WHERE section = ? OR section = ? OR section LIKE ? OR section LIKE ?
+    ");
+    $sectionVariations = [
+        $student['section'],                    // exact match: "LEYNES"
+        $student['grade'] . '-' . $student['section'],  // with grade: "10-LEYNES"  
+        '%' . $student['section'] . '%',       // contains: "%LEYNES%"
+        '%' . $student['section']              // ends with: "%LEYNES"
+    ];
+    $stmt->execute($sectionVariations);
+    $moduleTeacherIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $allTeacherIds = array_merge($allTeacherIds, $moduleTeacherIds);
+    
+    // Remove duplicates
+    $teacherIds = array_unique($allTeacherIds);
     
     if (empty($teacherIds)) {
-        jsonResponse(['success' => true, 'modules' => [], 'student' => $student]);
+        echo json_encode([
+            'success' => true, 
+            'message' => 'No modules found - no teachers assigned',
+            'data' => [
+                'modules' => [], 
+                'student' => $student,
+                'student_teacher_id' => $student['teacher_id'],
+                'section_variations_tried' => $sectionVariations
+            ]
+        ]);
+        exit;
     }
     
-    // Get modules from ALL teachers assigned to this section
+    // Get modules from ALL teachers assigned to this section (flexible section matching)
     $placeholders = str_repeat('?,', count($teacherIds) - 1) . '?';
     $stmt = $pdo->prepare("
         SELECT m.*, a.name as teacher_name 
         FROM modules m 
         JOIN admins a ON m.admin_id = a.id 
         WHERE m.admin_id IN ($placeholders) 
+        AND (m.section = ? OR m.section = ? OR m.section LIKE ? OR m.section LIKE ?)
         ORDER BY m.quarter, m.id
     ");
-    $stmt->execute($teacherIds);
+    
+    // Prepare section variations to match
+    $sectionVariations = [
+        $student['section'],                    // exact match: "LEYNES"
+        $student['grade'] . '-' . $student['section'],  // with grade: "10-LEYNES"  
+        '%' . $student['section'] . '%',       // contains: "%LEYNES%"
+        '%' . $student['section']              // ends with: "%LEYNES"
+    ];
+    
+    $executeParams = array_merge($teacherIds, $sectionVariations);
+    $stmt->execute($executeParams);
     $modules = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Parse questions JSON for each module
@@ -62,14 +125,26 @@ try {
     // Parse student progress
     $student['progress'] = $student['progress'] ? json_decode($student['progress'], true) : [];
     
-    jsonResponse([
+    // Get adviser/teacher information
+    $adviser = null;
+    if ($student['teacher_id']) {
+        $stmt = $pdo->prepare("SELECT name, username, subject FROM teachers WHERE id = ?");
+        $stmt->execute([$student['teacher_id']]);
+        $adviser = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    echo json_encode([
         'success' => true,
-        'modules' => $modules,
-        'student' => $student,
-        'teacher_ids' => $teacherIds
+        'message' => 'Data loaded successfully',
+        'data' => [
+            'modules' => $modules,
+            'student' => $student,
+            'adviser' => $adviser
+        ]
     ]);
     
 } catch (PDOException $e) {
-    jsonResponse(['success' => false, 'error' => 'Database error'], 500);
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Database error']);
 }
 ?>

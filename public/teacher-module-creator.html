@@ -14,6 +14,181 @@
     .card-shadow {
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
+    
+    /* Cool Section Checkboxes Styles */
+    .sections-container {
+      background: linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%);
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .sections-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+      background-size: 200% 100%;
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    
+    @keyframes shimmer {
+      0%, 100% { background-position: 200% 0; }
+      50% { background-position: -200% 0; }
+    }
+    
+    .section-item {
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .section-item:hover {
+      border-color: #667eea;
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .section-item.advisory {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border-color: #3b82f6;
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
+    }
+    
+    .section-item.advisory::before {
+      content: '👑';
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-size: 16px;
+      opacity: 0.7;
+    }
+    
+    .section-item.checked {
+      border-color: #10b981;
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+    }
+    
+    .section-item.checked::after {
+      content: '✓';
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      color: #10b981;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    
+    .custom-checkbox {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #d1d5db;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+      margin-right: 12px;
+    }
+    
+    .custom-checkbox:checked {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-color: #667eea;
+    }
+    
+    .custom-checkbox:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .custom-checkbox:hover {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .section-label {
+      font-weight: 600;
+      color: #374151;
+      cursor: pointer;
+      transition: color 0.3s ease;
+      flex-grow: 1;
+    }
+    
+    .section-item:hover .section-label {
+      color: #667eea;
+    }
+    
+    .advisory-badge {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .control-buttons {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      border: 2px solid #e5e7eb;
+      margin-top: 16px;
+    }
+    
+    .control-btn {
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-right: 12px;
+    }
+    
+    .control-btn:hover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .sections-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      color: #374151;
+      font-weight: 700;
+    }
+    
+    .sections-icon {
+      font-size: 24px;
+      margin-right: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -41,8 +216,11 @@
             <input type="text" id="title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
           </div>
           <div>
-            <label for="section" class="block text-sm font-medium text-gray-700 mb-1">Section</label>
-            <input type="text" id="section" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required placeholder="e.g. 10-A">
+            <label for="section" class="block text-sm font-medium text-gray-700 mb-1">Sections to Assign</label>
+            <div id="sectionsContainer" class="w-full p-4 border border-gray-200 rounded-lg bg-gray-50">
+              <p class="text-gray-500 text-sm mb-2">Loading your taught sections...</p>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Select which sections should receive this module</p>
           </div>
         </div>
         <div class="mt-4">
@@ -128,6 +306,136 @@
     </div>
   </main>
   <script>
+    // Check teacher authentication and load advisory section
+    function checkTeacherAuth() {
+      const teacherLoggedIn = localStorage.getItem("teacherLoggedIn");
+      const teacherToken = localStorage.getItem("teacherToken");
+      const teacherUser = localStorage.getItem("teacherUser");
+      
+      if (teacherLoggedIn !== "true" || !teacherToken || !teacherUser) {
+        alert("Access denied. Please log in as a teacher.");
+        window.location.href = "teacher-login.html";
+        return false;
+      }
+      
+      try {
+        const teacher = JSON.parse(teacherUser);
+        return teacher;
+      } catch (error) {
+        console.error('Error parsing teacher data:', error);
+        localStorage.removeItem("teacherLoggedIn");
+        localStorage.removeItem("teacherToken");
+        localStorage.removeItem("teacherUser");
+        window.location.href = "teacher-login.html";
+        return false;
+      }
+    }
+
+    function loadTeacherInfo() {
+      const teacher = checkTeacherAuth();
+      if (!teacher) return;
+
+      const sectionsString = teacher.sections || '';
+      const advisorySection = teacher.advisory_section;
+      const sectionsContainer = document.getElementById('sectionsContainer');
+
+      // Combine taught sections and advisory section
+      let allSections = [];
+      
+      // Add taught sections
+      if (sectionsString && sectionsString.trim()) {
+        const taughtSections = sectionsString.split(',').map(s => s.trim()).filter(s => s);
+        allSections = [...taughtSections];
+      }
+      
+      // Add advisory section if it exists and isn't already in the list
+      if (advisorySection && advisorySection.trim() && !allSections.includes(advisorySection.trim())) {
+        allSections.unshift(advisorySection.trim()); // Add at the beginning
+      }
+      
+      if (allSections.length > 0) {
+        const sectionsHTML = `
+          <div class="sections-container">
+            <div class="sections-header">
+              <span class="sections-icon">🎯</span>
+              <span>Select Target Sections</span>
+            </div>
+            ${allSections.map(section => {
+              const isAdvisory = section === advisorySection;
+              return `
+                <div class="section-item ${isAdvisory ? 'advisory checked' : ''}" data-section="${section}">
+                  <div class="flex items-center">
+                    <input type="checkbox" id="section_${section}" name="selectedSections" value="${section}" 
+                           ${isAdvisory ? 'checked' : ''} 
+                           class="custom-checkbox">
+                    <label for="section_${section}" class="section-label">${section}</label>
+                    ${isAdvisory ? '<span class="advisory-badge">Advisory</span>' : ''}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+            
+            <div class="control-buttons">
+              <button type="button" id="selectAllSections" class="control-btn">
+                <span>📋</span> Select All
+              </button>
+              <button type="button" id="clearAllSections" class="control-btn">
+                <span>🗑️</span> Clear All
+              </button>
+            </div>
+          </div>
+        `;
+        
+        sectionsContainer.innerHTML = sectionsHTML;
+        
+        // Add event listeners for checkboxes to update visual states
+        const checkboxes = document.querySelectorAll('input[name="selectedSections"]');
+        checkboxes.forEach(checkbox => {
+          checkbox.addEventListener('change', function() {
+            const sectionItem = this.closest('.section-item');
+            if (this.checked) {
+              sectionItem.classList.add('checked');
+            } else {
+              sectionItem.classList.remove('checked');
+            }
+          });
+        });
+        
+        // Add event listeners for select/clear all buttons
+        document.getElementById('selectAllSections').addEventListener('click', function() {
+          checkboxes.forEach(cb => {
+            cb.checked = true;
+            cb.closest('.section-item').classList.add('checked');
+          });
+        });
+        
+        document.getElementById('clearAllSections').addEventListener('click', function() {
+          checkboxes.forEach(cb => {
+            cb.checked = false;
+            cb.closest('.section-item').classList.remove('checked');
+          });
+        });
+        
+      } else {
+        sectionsContainer.innerHTML = `
+          <div class="sections-container">
+            <div class="sections-header">
+              <span class="sections-icon">⚠️</span>
+              <span>No Sections Available</span>
+            </div>
+            <div class="section-item">
+              <p class="text-red-500 text-center py-4">
+                No sections found. Please add sections in your dashboard first.
+              </p>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Load teacher info when page loads
+    document.addEventListener('DOMContentLoaded', loadTeacherInfo);
+
     let questionCount = 1;
 
     // Add question functionality
@@ -214,6 +522,13 @@
       const errorDiv = document.getElementById('error');
       errorDiv.textContent = '';
       
+      // Validate selected sections
+      const checkedSections = document.querySelectorAll('input[name="selectedSections"]:checked');
+      if (checkedSections.length === 0) {
+        errorDiv.textContent = 'Please select at least one section to assign this module.';
+        return;
+      }
+      
       // Validate minimum questions
       const questions = document.querySelectorAll('.question-item');
       if (questions.length < 5) {
@@ -237,7 +552,12 @@
       const formData = new FormData();
       formData.append('title', document.getElementById('title').value.trim());
       formData.append('description', document.getElementById('description').value.trim());
-      formData.append('section', document.getElementById('section').value.trim());
+      
+      // Collect selected sections
+      const selectedSections = Array.from(document.querySelectorAll('input[name="selectedSections"]:checked'))
+                                   .map(cb => cb.value);
+      formData.append('sections', JSON.stringify(selectedSections));
+      
       formData.append('passingScore', document.getElementById('passingScore').value);
       formData.append('pdfFile', pdfFile);
       
@@ -258,7 +578,7 @@
       formData.append('questions', JSON.stringify(questionsData));
       
       try {
-        const response = await fetch('/tms/remediation-web/api/create-module.php', {
+        const response = await fetch('/tms/remediation-web/api/teacher-create-module.php', {
           method: 'POST',
           body: formData
         });

@@ -105,7 +105,7 @@
                         <i class="fas fa-chalkboard-teacher text-blue-600 mr-3"></i>
                         Teacher Management
                     </h2>
-                    <a href="teacher-sections.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    <a href="sections-gradelevel.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
                         <i class="fas fa-cog mr-2"></i>Manage Sections
                     </a>
                 </div>
@@ -153,9 +153,9 @@
             </h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <a href="teacher-sections.html" class="bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-                    <i class="fas fa-users-cog mr-2"></i>Teacher Sections
-                </a>
+                <button onclick="openSecurityDashboard()" class="bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                    <i class="fas fa-shield-alt mr-2"></i>Security Dashboard
+                </button>
                 
                 <button onclick="viewSystemLogs()" class="bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
                     <i class="fas fa-list-alt mr-2"></i>System Logs
@@ -187,13 +187,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Grade Level</label>
                             <select id="teacherGrade" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="">Select grade</option>
-                                <option value="7">Grade 7</option>
-                                <option value="8">Grade 8</option>
-                                <option value="9">Grade 9</option>
-                                <option value="10">Grade 10</option>
-                                <option value="11">Grade 11</option>
-                                <option value="12">Grade 12</option>
+                                <option value="">Loading grade levels...</option>
                             </select>
                         </div>
                         <div>
@@ -203,8 +197,11 @@
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Sections Taught <span class="text-xs text-gray-400">(comma separated)</span></label>
-                        <input type="text" id="teacherSections" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="e.g. 10-A, 10-B, 10-C">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Advisory Section (Optional)</label>
+                        <select id="teacherAdvisorySection" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select advisory section (optional)</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Students will be automatically assigned to this section when selecting this teacher as adviser</p>
                     </div>
                     
                     <div>
@@ -279,10 +276,11 @@
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Teacher</label>
-                        <select id="studentTeacher" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                            <option value="">-- Select Teacher --</option>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Adviser (Teacher)</label>
+                        <select id="studentTeacher" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" onchange="updateStudentSection()">
+                            <option value="">-- Select Adviser --</option>
                         </select>
+                        <p class="text-xs text-gray-500 mt-1" id="advisoryInfo">Student will be assigned to the teacher's advisory section</p>
                     </div>
                     
                     <div>

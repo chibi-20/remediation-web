@@ -127,7 +127,6 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("❌ Submission failed: " + result.error);
       }
     } catch (err) {
-      console.error("❌ Error submitting module:", err);
       alert("❌ Server error. Please try again.");
     }
   });

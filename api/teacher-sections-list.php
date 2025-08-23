@@ -5,18 +5,33 @@ require_once '../config.php';
 header('Content-Type: application/json');
 
 try {
-    $stmt = $pdo->prepare("
-        SELECT ts.*, a.name as teacher_name, a.subject 
-        FROM teacher_sections ts 
-        JOIN admins a ON ts.admin_id = a.id 
-        ORDER BY ts.section, a.name
+    $db = new Database();
+    $pdo = $db->getConnection();
+    
+    // Get teacher-section assignments with teacher details
+    $stmt = $pdo->query("
+        SELECT 
+            ts.id,
+            ts.section,
+            ts.role,
+            ts.created_at,
+            t.id as teacher_id,
+            t.username as teacher_username,
+            t.name as teacher_name,
+            t.subject as teacher_subject,
+            t.grade as teacher_grade
+        FROM teacher_sections ts
+        LEFT JOIN teachers t ON ts.admin_id = t.id
+        ORDER BY ts.section, ts.role DESC, t.name
     ");
-    $stmt->execute();
+    
     $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    jsonResponse($assignments);
+    // Return as JSON array (maintaining backward compatibility)
+    echo json_encode($assignments);
     
-} catch (PDOException $e) {
-    jsonResponse(['error' => 'Database error'], 500);
+} catch (Exception $e) {
+    error_log("Error getting teacher sections: " . $e->getMessage());
+    echo json_encode([]);
 }
 ?>

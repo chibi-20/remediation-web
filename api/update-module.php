@@ -1,12 +1,13 @@
 <?php
 // api/update-module.php - Update module endpoint
 require_once '../config.php';
+require_once '../secure-upload.php';
+require_once '../security-middleware.php';
+
+// Apply upload security checks
+SecurityMiddleware::checkUploadSecurity();
 
 header('Content-Type: application/json');
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
-}
 
 // Check if admin is logged in
 requireLogin();
@@ -20,25 +21,14 @@ if (empty($moduleId) || empty($quarter) || empty($questions)) {
     jsonResponse(['success' => false, 'error' => 'Missing required fields']);
 }
 
-// Handle file upload (optional for updates)
+// Handle secure file upload (optional for updates)
 $filename = null;
-if (isset($_FILES['pdf']) && $_FILES['pdf']['error'] === UPLOAD_ERR_OK) {
-    $uploadDir = __DIR__ . '/../public/modules/';
-    
-    // Create directory if it doesn't exist
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
+try {
+    if (isset($_FILES['pdf']) && $_FILES['pdf']['error'] === UPLOAD_ERR_OK) {
+        $filename = SecureFileUpload::handleUpload('pdf', ['pdf']);
     }
-    
-    $originalName = $_FILES['pdf']['name'];
-    $uniqueName = time() . '-' . $originalName;
-    $uploadPath = $uploadDir . $uniqueName;
-    
-    if (move_uploaded_file($_FILES['pdf']['tmp_name'], $uploadPath)) {
-        $filename = $uniqueName;
-    } else {
-        jsonResponse(['success' => false, 'error' => 'File upload failed']);
-    }
+} catch (Exception $e) {
+    jsonResponse(['success' => false, 'error' => 'File upload error: ' . $e->getMessage()]);
 }
 
 try {

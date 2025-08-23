@@ -1,9 +1,23 @@
 <?php
-// config-mysql.php - MySQL configuration version
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'remediation_web');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+// config.php - Environment-aware configuration
+require_once __DIR__ . '/env-loader.php';
+
+// Database configuration from environment
+define('DB_HOST', EnvLoader::get('DB_HOST', 'localhost'));
+define('DB_NAME', EnvLoader::get('DB_NAME', 'remediation_web'));
+define('DB_USER', EnvLoader::get('DB_USER', 'root'));
+define('DB_PASS', EnvLoader::get('DB_PASS', ''));
+
+// Application configuration
+define('APP_NAME', EnvLoader::get('APP_NAME', 'SAGIP ARAL - Remediation Learning System'));
+define('APP_VERSION', EnvLoader::get('APP_VERSION', '1.0.0'));
+define('BASE_URL', EnvLoader::get('BASE_URL', 'http://localhost/tms/remediation-web'));
+define('UPLOAD_PATH', EnvLoader::get('UPLOAD_PATH', 'public/MODULES/'));
+define('MAX_FILE_SIZE', (int)EnvLoader::get('MAX_FILE_SIZE', 10485760));
+
+// Security configuration
+define('SESSION_LIFETIME', (int)EnvLoader::get('SESSION_LIFETIME', 3600));
+define('SECURE_COOKIES', filter_var(EnvLoader::get('SECURE_COOKIES', false), FILTER_VALIDATE_BOOLEAN));
 
 class Database {
     private $pdo;
@@ -108,10 +122,28 @@ function validateRequired($fields, $data) {
     return null;
 }
 
-// Session management
+// Session management with environment-based configuration
 function startSession() {
     if (session_status() === PHP_SESSION_NONE) {
+        // Configure session based on environment
+        if (SECURE_COOKIES) {
+            ini_set('session.cookie_secure', 1);
+            ini_set('session.cookie_httponly', 1);
+            ini_set('session.cookie_samesite', 'Strict');
+        }
+        
+        ini_set('session.gc_maxlifetime', SESSION_LIFETIME);
+        ini_set('session.cookie_lifetime', SESSION_LIFETIME);
+        
         session_start();
+        
+        // Regenerate session ID periodically for security
+        if (!isset($_SESSION['last_regeneration'])) {
+            $_SESSION['last_regeneration'] = time();
+        } else if (time() - $_SESSION['last_regeneration'] > 300) { // 5 minutes
+            session_regenerate_id(true);
+            $_SESSION['last_regeneration'] = time();
+        }
     }
 }
 

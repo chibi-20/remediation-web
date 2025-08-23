@@ -64,18 +64,19 @@
       const errorDiv = document.getElementById("error");
       errorDiv.textContent = '';
       try {
-        const response = await fetch("/tms/remediation-web/api/admin-login.php", {
+        const response = await fetch("/tms/remediation-web/api/teacher-login.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password }),
         });
         const result = await response.json();
         if (result.success) {
-          localStorage.setItem("adminLoggedIn", "true");
-          localStorage.setItem("isAdmin", "true");
+          localStorage.setItem("teacherLoggedIn", "true");
+          localStorage.setItem("teacherToken", result.data.token);
+          localStorage.setItem("teacherUser", JSON.stringify(result.data.teacher));
           window.location.href = "teacher-dashboard.html";
         } else {
-          errorDiv.textContent = "❌ " + result.error;
+          errorDiv.textContent = "❌ " + (result.message || result.error);
         }
       } catch (err) {
         errorDiv.textContent = "❌ Server error. Please try again.";

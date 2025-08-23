@@ -24,6 +24,7 @@ try {
     $email = trim($input['email'] ?? '');
     $subject = trim($input['subject'] ?? '');
     $grade = trim($input['grade'] ?? '');
+    $advisory_section = trim($input['advisory_section'] ?? '');
     $sections = trim($input['sections'] ?? '');
     
     if (empty($username) || empty($password) || empty($name)) {
@@ -46,8 +47,8 @@ try {
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     
     // Insert new teacher
-    $stmt = $pdo->prepare("INSERT INTO teachers (username, password, name, email, subject, grade, sections, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
-    $stmt->execute([$username, $hashedPassword, $name, $email, $subject, $grade, $sections]);
+    $stmt = $pdo->prepare("INSERT INTO teachers (username, password, name, email, subject, grade, advisory_section, sections, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+    $stmt->execute([$username, $hashedPassword, $name, $email, $subject, $grade, $advisory_section, $sections]);
     
     jsonResponse(true, 'Teacher added successfully');
     

@@ -25,10 +25,11 @@ try {
         exit;
     }
     
-    $db = Database::getInstance();
+    $db = new Database();
+    $pdo = $db->getConnection();
     
     // Check if teacher exists
-    $stmt = $db->prepare("SELECT id FROM teachers WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id FROM teachers WHERE id = ?");
     $stmt->execute([$teacherId]);
     if (!$stmt->fetch()) {
         jsonResponse(false, 'Teacher not found');
@@ -36,7 +37,7 @@ try {
     }
     
     // Delete teacher
-    $stmt = $db->prepare("DELETE FROM teachers WHERE id = ?");
+    $stmt = $pdo->prepare("DELETE FROM teachers WHERE id = ?");
     $stmt->execute([$teacherId]);
     
     jsonResponse(true, 'Teacher deleted successfully');

@@ -17,7 +17,6 @@ function checkAdminAuth() {
         const admin = JSON.parse(adminUser);
         document.getElementById('adminName').textContent = admin.username || 'Admin';
     } catch (error) {
-        console.error('Error parsing admin user:', error);
         logout();
     }
 }
@@ -32,6 +31,8 @@ async function loadDashboardData() {
         await loadStudents();
     } catch (error) {
         console.error('Error loading dashboard data:', error);
+        // Show user-friendly error message
+        showNotification('Error loading dashboard data. Please refresh the page.', 'error');
     }
 }
 
@@ -52,7 +53,6 @@ async function loadStats() {
         document.getElementById('moduleCount').textContent = modules.success ? modules.data.length : 0;
         document.getElementById('sessionCount').textContent = Math.floor(Math.random() * 20) + 5; // Mock data for now
     } catch (error) {
-        console.error('Error loading stats:', error);
     }
 }
 
@@ -92,13 +92,17 @@ async function loadTeachers() {
             });
         }
     } catch (error) {
-        console.error('Error loading teachers:', error);
     }
 }
 
 async function loadStudents() {
     try {
         const response = await fetch('../api/admin-get-students.php');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
         
         if (data.success) {
@@ -115,8 +119,9 @@ async function loadStudents() {
                 studentDiv.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
                 studentDiv.innerHTML = `
                     <div>
-                        <p class="font-medium text-gray-900">${student.name}</p>
-                        <p class="text-sm text-gray-500">Section: ${student.section} | Username: ${student.username}</p>
+                        <p class="font-medium text-gray-900">${student.displayName || student.fullName || 'Unknown Student'}</p>
+                        <p class="text-sm text-gray-500">LRN: ${student.lrn} | Section: ${student.section || 'N/A'} | Grade: ${student.grade || 'N/A'}</p>
+                        <p class="text-xs text-gray-400">Teacher: ${student.teacher_name || 'Not assigned'}</p>
                     </div>
                     <div class="flex space-x-2">
                         <button onclick="editStudent(${student.id})" class="text-blue-600 hover:text-blue-800">
@@ -129,15 +134,94 @@ async function loadStudents() {
                 `;
                 studentsList.appendChild(studentDiv);
             });
+        } else {
+            console.error('API Error:', data.message);
+            const studentsList = document.getElementById('studentsList');
+            studentsList.innerHTML = '<p class="text-red-500 text-center py-4">Error loading students: ' + (data.message || 'Unknown error') + '</p>';
         }
     } catch (error) {
         console.error('Error loading students:', error);
+        const studentsList = document.getElementById('studentsList');
+        studentsList.innerHTML = '<p class="text-red-500 text-center py-4">Error connecting to server. Please try again.</p>';
     }
 }
+
+// Global variable to store grade levels data
+let gradeLevelsData = [];
 
 // Modal functions
 function showAddTeacherModal() {
     document.getElementById('addTeacherModal').classList.remove('hidden');
+    loadGradeLevelsForTeacher();
+}
+
+async function loadGradeLevelsForTeacher() {
+    try {
+        const response = await fetch('../api/grade-levels.php');
+        const data = await response.json();
+        
+        if (data.success && Array.isArray(data.data)) {
+            gradeLevelsData = data.data;
+            populateGradeLevelsDropdown();
+            
+            // Add event listener for grade level changes
+            const gradeSelect = document.getElementById('teacherGrade');
+            gradeSelect.removeEventListener('change', handleGradeChange); // Remove existing listener
+            gradeSelect.addEventListener('change', handleGradeChange);
+        } else {
+        }
+    } catch (error) {
+    }
+}
+
+function populateGradeLevelsDropdown() {
+    const gradeSelect = document.getElementById('teacherGrade');
+    
+    // Clear existing options
+    gradeSelect.innerHTML = '<option value="">Select grade level</option>';
+    
+    // Add grade levels
+    gradeLevelsData.forEach(grade => {
+        const option = document.createElement('option');
+        option.value = grade.level;
+        option.textContent = `Grade ${grade.level}`;
+        gradeSelect.appendChild(option);
+    });
+}
+
+function handleGradeChange() {
+    const gradeLevel = document.getElementById('teacherGrade').value;
+    loadSectionsForGradeLevel(gradeLevel);
+}
+
+function loadSectionsForGradeLevel(gradeLevel) {
+    const advisorySectionSelect = document.getElementById('teacherAdvisorySection');
+    
+    // Clear existing sections
+    advisorySectionSelect.innerHTML = '<option value="">Select advisory section (optional)</option>';
+    
+    if (!gradeLevel) {
+        return;
+    }
+    
+    // Find the grade data
+    const gradeData = gradeLevelsData.find(g => g.level == gradeLevel);
+    
+    if (gradeData && gradeData.sections && gradeData.sections.length > 0) {
+        gradeData.sections.forEach(section => {
+            const option = document.createElement('option');
+            option.value = section.name;
+            option.textContent = section.name;
+            advisorySectionSelect.appendChild(option);
+        });
+    } else {
+        // No sections available for this grade
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No sections available for this grade';
+        option.disabled = true;
+        advisorySectionSelect.appendChild(option);
+    }
 }
 
 function closeAddTeacherModal() {
@@ -156,24 +240,55 @@ async function loadTeachersForStudentModal() {
         const data = await response.json();
         
         const teacherSelect = document.getElementById('studentTeacher');
-        teacherSelect.innerHTML = '<option value="">-- Select Teacher --</option>';
+        teacherSelect.innerHTML = '<option value="">-- Select Adviser --</option>';
         
         if (data.success && Array.isArray(data.data)) {
+            // Store teacher data globally for reference
+            window.teachersData = data.data;
+            
             data.data.forEach(teacher => {
                 const option = document.createElement('option');
                 option.value = teacher.id;
-                option.textContent = `${teacher.name || teacher.username}${teacher.subject ? ' (' + teacher.subject + ')' : ''}`;
+                option.textContent = `${teacher.name || teacher.username}${teacher.advisory_section ? ' (Advisory: ' + teacher.advisory_section + ')' : ' (No Advisory Section)'}`;
+                option.setAttribute('data-advisory-section', teacher.advisory_section || '');
                 teacherSelect.appendChild(option);
             });
         }
     } catch (error) {
-        console.error('Error loading teachers for student modal:', error);
+    }
+}
+
+function updateStudentSection() {
+    const teacherSelect = document.getElementById('studentTeacher');
+    const selectedOption = teacherSelect.options[teacherSelect.selectedIndex];
+    const advisorySection = selectedOption.getAttribute('data-advisory-section');
+    const advisoryInfo = document.getElementById('advisoryInfo');
+    
+    if (advisorySection && advisorySection.trim() !== '') {
+        // Parse advisory section to set grade and section
+        const sectionParts = advisorySection.split('-');
+        if (sectionParts.length === 2) {
+            const grade = sectionParts[0];
+            const section = sectionParts[1];
+            
+            // Set grade and section automatically
+            document.getElementById('studentGrade').value = grade;
+            document.getElementById('studentSection').value = section;
+            
+            advisoryInfo.textContent = `Student will be assigned to ${advisorySection}`;
+            advisoryInfo.className = 'text-xs text-green-600 mt-1';
+        }
+    } else {
+        advisoryInfo.textContent = 'Selected teacher has no advisory section. Please select grade and section manually.';
+        advisoryInfo.className = 'text-xs text-yellow-600 mt-1';
     }
 }
 
 function closeAddStudentModal() {
     document.getElementById('addStudentModal').classList.add('hidden');
     document.getElementById('addStudentForm').reset();
+    document.getElementById('advisoryInfo').textContent = 'Student will be assigned to the teacher\'s advisory section';
+    document.getElementById('advisoryInfo').className = 'text-xs text-gray-500 mt-1';
 }
 
 // Form submissions
@@ -187,7 +302,7 @@ document.getElementById('addTeacherForm').addEventListener('submit', async funct
         email: document.getElementById('teacherEmail').value,
         subject: document.getElementById('teacherSubject').value,
         grade: document.getElementById('teacherGrade').value,
-        sections: document.getElementById('teacherSections').value
+        advisory_section: document.getElementById('teacherAdvisorySection').value
     };
     
     try {
@@ -210,7 +325,6 @@ document.getElementById('addTeacherForm').addEventListener('submit', async funct
             alert(data.message || 'Error adding teacher');
         }
     } catch (error) {
-        console.error('Error adding teacher:', error);
         alert('Error adding teacher');
     }
 });
@@ -258,7 +372,6 @@ document.getElementById('addStudentForm').addEventListener('submit', async funct
             alert(data.message || 'Error adding student');
         }
     } catch (error) {
-        console.error('Error adding student:', error);
         alert('Error adding student');
     }
 });
@@ -288,7 +401,6 @@ async function deleteTeacher(id) {
             alert(data.message || 'Error deleting teacher');
         }
     } catch (error) {
-        console.error('Error deleting teacher:', error);
         alert('Error deleting teacher');
     }
 }
@@ -317,7 +429,6 @@ async function deleteStudent(id) {
             alert(data.message || 'Error deleting student');
         }
     } catch (error) {
-        console.error('Error deleting student:', error);
         alert('Error deleting student');
     }
 }
@@ -342,6 +453,53 @@ function viewSystemLogs() {
     alert('System logs functionality will be implemented soon!');
 }
 
+// Notification system
+function showNotification(message, type = 'info') {
+    // Remove existing notifications
+    const existingNotification = document.getElementById('notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.id = 'notification';
+    notification.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg max-w-sm`;
+    
+    // Set color based on type
+    switch (type) {
+        case 'error':
+            notification.className += ' bg-red-500 text-white';
+            break;
+        case 'success':
+            notification.className += ' bg-green-500 text-white';
+            break;
+        case 'warning':
+            notification.className += ' bg-yellow-500 text-white';
+            break;
+        default:
+            notification.className += ' bg-blue-500 text-white';
+    }
+    
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <span class="flex-1">${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification && notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
 function backupDatabase() {
     // TODO: Implement database backup
     alert('Database backup functionality will be implemented soon!');
@@ -350,6 +508,28 @@ function backupDatabase() {
 function systemSettings() {
     // TODO: Implement system settings
     alert('System settings functionality will be implemented soon!');
+}
+
+function openSecurityDashboard() {
+    // Get admin authentication data
+    const adminToken = localStorage.getItem('adminToken');
+    const adminUser = localStorage.getItem('adminUser');
+    
+    if (!adminToken || !adminUser) {
+        showNotification('Please login as admin first', 'error');
+        return;
+    }
+    
+    // Open security dashboard in a new tab/window with authentication context
+    const securityWindow = window.open('security-dashboard.html', '_blank');
+    
+    // Pass authentication context to the new window when it loads
+    securityWindow.addEventListener('load', function() {
+        if (securityWindow.localStorage) {
+            securityWindow.localStorage.setItem('adminToken', adminToken);
+            securityWindow.localStorage.setItem('adminUser', adminUser);
+        }
+    });
 }
 
 function logout() {

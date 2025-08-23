@@ -5,12 +5,16 @@ require_once '../config.php';
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
 }
 
 $input = json_decode(file_get_contents('php://input'), true);
 $firstName = sanitizeInput($input['firstName'] ?? '');
 $lastName = sanitizeInput($input['lastName'] ?? '');
+$middleInitial = sanitizeInput($input['middleInitial'] ?? '');
+$grade = sanitizeInput($input['grade'] ?? '');
 $section = sanitizeInput($input['section'] ?? '');
 $lrn = sanitizeInput($input['lrn'] ?? '');
 $adminId = $input['adminId'] ?? null;
@@ -18,40 +22,64 @@ $password = $input['password'] ?? '';
 
 // Validate password
 if (strlen($password) < 6) {
-    jsonResponse(['success' => false, 'error' => 'Password must be at least 6 characters.']);
+    echo json_encode(['success' => false, 'message' => 'Password must be at least 6 characters.']);
+    exit;
 }
 
 $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
 // Validate required fields
-$error = validateRequired(['firstName', 'lastName', 'section', 'lrn'], $input);
+$error = validateRequired(['firstName', 'lastName', 'grade', 'lrn'], $input);
 if ($error) {
-    jsonResponse(['success' => false, 'error' => $error]);
+    echo json_encode(['success' => false, 'message' => $error]);
+    exit;
 }
 
 // Validate LRN format (should be 12 digits)
 if (!preg_match('/^\d{12}$/', $lrn)) {
-    jsonResponse(['success' => false, 'error' => 'LRN must be exactly 12 digits.']);
+    echo json_encode(['success' => false, 'message' => 'LRN must be exactly 12 digits.']);
+    exit;
 }
 
 try {
+    $db = new Database();
+    $pdo = $db->getConnection();
+    
     // Check if LRN already exists
     $stmt = $pdo->prepare("SELECT * FROM students WHERE lrn = ?");
     $stmt->execute([$lrn]);
     
     if ($stmt->fetch()) {
-        jsonResponse(['success' => false, 'error' => 'LRN already exists.']);
+        echo json_encode(['success' => false, 'message' => 'LRN already exists.']);
+        exit;
     }
     
-    // Insert new student with password
-    $stmt = $pdo->prepare("INSERT INTO students (firstName, lastName, section, lrn, password, admin_id) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$firstName, $lastName, $section, $lrn, $passwordHash, $adminId]);
+    // Insert new student with teacher assignment
+    $stmt = $pdo->prepare("INSERT INTO students (firstName, lastName, grade, section, lrn, password, teacher_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$firstName, $lastName, $grade, $section, $lrn, $passwordHash, $adminId]);
     
     $studentId = $pdo->lastInsertId();
     
-    jsonResponse(['success' => true, 'id' => $studentId]);
+    echo json_encode([
+        'success' => true, 
+        'message' => 'Student registered successfully',
+        'data' => ['id' => $studentId]
+    ]);
     
 } catch (PDOException $e) {
-    jsonResponse(['success' => false, 'error' => 'Failed to register student.'], 500);
+    http_response_code(500);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Database error: ' . $e->getMessage(),
+        'code' => $e->getCode(),
+        'debug' => [
+            'firstName' => $firstName,
+            'lastName' => $lastName, 
+            'grade' => $grade,
+            'section' => $section,
+            'lrn' => $lrn,
+            'adminId' => $adminId
+        ]
+    ]);
 }
 ?>

@@ -1,0 +1,46 @@
+# Security Configuration for Upload Directory
+# Place this file as .htaccess in public/MODULES/ directory
+
+# Disable PHP execution in upload directory
+php_flag engine off
+
+# Prevent direct access to uploaded files
+Options -Indexes
+
+# Only allow specific file types
+<FilesMatch "\.(pdf|doc|docx|ppt|pptx)$">
+    # Allow access to educational documents
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Deny all other file types
+<FilesMatch "\.">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Re-allow the specific educational file types
+<FilesMatch "\.(pdf|doc|docx|ppt|pptx)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Security headers for uploaded files
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options nosniff
+    Header set X-Frame-Options DENY
+    Header set Content-Security-Policy "default-src 'none'; object-src 'none';"
+</IfModule>
+
+# Prevent execution of scripts
+RemoveHandler .php .phtml .php3 .php4 .php5 .php6 .py .pl .jsp .asp .sh .cgi
+
+# Remove server signature
+ServerSignature Off
+
+# Prevent access to sensitive files
+<FilesMatch "^\.">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
