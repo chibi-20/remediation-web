@@ -502,7 +502,7 @@ SUPPORT & DOCUMENTATION:
 -------------------------
 
 ### 📞 **TECHNICAL SUPPORT:**
-- **Email:** [Insert institutional email]
+- **Email:** jaymar.canturia@deped.gov.ph
 - **Documentation:** Comprehensive API documentation included
 - **Video Tutorials:** Available for common administrative tasks
 - **Community Forum:** GitHub Discussions for community support
