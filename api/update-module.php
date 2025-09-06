@@ -1,50 +1,139 @@
 <?php
-// api/update-module.php - Update module endpoint
+// api/update-module.php - Update module for teachers
 require_once '../config.php';
 require_once '../secure-upload.php';
-require_once '../security-middleware.php';
-
-// Apply upload security checks
-SecurityMiddleware::checkUploadSecurity();
 
 header('Content-Type: application/json');
 
-// Check if admin is logged in
-requireLogin();
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    exit;
+}
 
-$moduleId = $_GET['id'] ?? null;
-$quarter = sanitizeInput($_POST['quarter'] ?? '');
-$questions = $_POST['questions'] ?? '';
+// Check teacher authentication
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['teacher_logged_in']) || !$_SESSION['teacher_logged_in'] || !isset($_SESSION['teacher_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'error' => 'Teacher authentication required']);
+    exit;
+}
+
+$teacherId = $_SESSION['teacher_id'];
+$moduleId = intval($_POST['id'] ?? 0);
+
+if (!$moduleId) {
+    echo json_encode(['success' => false, 'error' => 'Module ID is required']);
+    exit;
+}
 
 // Validate required fields
-if (empty($moduleId) || empty($quarter) || empty($questions)) {
-    jsonResponse(['success' => false, 'error' => 'Missing required fields']);
+$title = sanitizeInput($_POST['title'] ?? '');
+$description = sanitizeInput($_POST['description'] ?? '');
+$section = sanitizeInput($_POST['section'] ?? '');
+$quarter = sanitizeInput($_POST['quarter'] ?? '');
+$passingScore = intval($_POST['passingScore'] ?? 75);
+$questionsJson = $_POST['questions'] ?? '';
+
+if (empty($title) || empty($description) || empty($section) || empty($quarter)) {
+    echo json_encode(['success' => false, 'error' => 'All basic fields are required']);
+    exit;
 }
 
-// Handle secure file upload (optional for updates)
-$filename = null;
-try {
-    if (isset($_FILES['pdf']) && $_FILES['pdf']['error'] === UPLOAD_ERR_OK) {
-        $filename = SecureFileUpload::handleUpload('pdf', ['pdf']);
+// Validate questions
+$questions = json_decode($questionsJson, true);
+if (!$questions || !is_array($questions) || count($questions) === 0) {
+    echo json_encode(['success' => false, 'error' => 'At least one question is required']);
+    exit;
+}
+
+// Validate each question
+foreach ($questions as $index => $question) {
+    if (empty($question['question']) || empty($question['optionA']) || empty($question['optionB']) || 
+        empty($question['optionC']) || empty($question['optionD']) || empty($question['correctAnswer'])) {
+        echo json_encode(['success' => false, 'error' => "Question " . ($index + 1) . " is incomplete"]);
+        exit;
     }
-} catch (Exception $e) {
-    jsonResponse(['success' => false, 'error' => 'File upload error: ' . $e->getMessage()]);
 }
 
 try {
-    if ($filename) {
-        // Update with new file
-        $stmt = $pdo->prepare("UPDATE modules SET quarter = ?, filename = ?, questions = ? WHERE id = ?");
-        $stmt->execute([$quarter, $filename, $questions, $moduleId]);
-    } else {
-        // Update without new file
-        $stmt = $pdo->prepare("UPDATE modules SET quarter = ?, questions = ? WHERE id = ?");
-        $stmt->execute([$quarter, $questions, $moduleId]);
+    $db = new Database();
+    $pdo = $db->getConnection();
+    
+    // Verify module exists and belongs to teacher
+    $stmt = $pdo->prepare("SELECT * FROM modules WHERE id = ? AND teacher_id = ?");
+    $stmt->execute([$moduleId, $teacherId]);
+    $existingModule = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$existingModule) {
+        echo json_encode(['success' => false, 'error' => 'Module not found or access denied']);
+        exit;
     }
     
-    jsonResponse(['success' => true]);
+    // Handle file upload if provided
+    $filename = $existingModule['filename']; // Keep existing filename by default
+    
+    if (isset($_FILES['pdfFile']) && $_FILES['pdfFile']['error'] === UPLOAD_ERR_OK) {
+        try {
+            // Delete old file if it exists
+            if ($existingModule['filename']) {
+                $oldFilePath = '../public/MODULES/' . $existingModule['filename'];
+                if (file_exists($oldFilePath)) {
+                    unlink($oldFilePath);
+                }
+            }
+            
+            // Upload new file using SecureFileUpload class
+            $filename = SecureFileUpload::handleUpload('pdfFile', ['pdf']);
+            
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => 'File upload failed: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+    
+    // Update module in database
+    $stmt = $pdo->prepare("
+        UPDATE modules 
+        SET title = ?, description = ?, section = ?, quarter = ?, passing_score = ?, 
+            filename = ?, questions = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND teacher_id = ?
+    ");
+    
+    $result = $stmt->execute([
+        $title,
+        $description,
+        $section,
+        $quarter,
+        $passingScore,
+        $filename,
+        $questionsJson,
+        $moduleId,
+        $teacherId
+    ]);
+    
+    if ($result) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Module updated successfully',
+            'data' => [
+                'module_id' => $moduleId,
+                'title' => $title,
+                'filename' => $filename
+            ]
+        ]);
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Failed to update module in database']);
+    }
     
 } catch (PDOException $e) {
-    jsonResponse(['success' => false, 'error' => 'Database error'], 500);
+    error_log("Error updating module: " . $e->getMessage());
+    echo json_encode(['success' => false, 'error' => 'Database error occurred']);
+} catch (Exception $e) {
+    error_log("Error updating module: " . $e->getMessage());
+    echo json_encode(['success' => false, 'error' => 'Server error occurred']);
 }
 ?>

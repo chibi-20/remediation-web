@@ -37,8 +37,8 @@ class SecureFileUpload {
         // Generate secure filename
         $secureFilename = self::generateSecureFilename($file['name']);
         
-        // Create upload directory if it doesn't exist
-        $uploadDir = __DIR__ . '/../' . self::UPLOAD_DIR;
+        // Create upload directory if it doesn't exist (fix: remove the /../ part)
+        $uploadDir = __DIR__ . '/' . self::UPLOAD_DIR;
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }

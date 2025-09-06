@@ -137,7 +137,11 @@
     </div>
   </main>
   <script>
+    console.log('Dashboard script loaded');
+    
     const lrn = localStorage.getItem("studentLRN");
+    console.log('Student LRN from localStorage:', lrn);
+    
     if (!lrn) {
       alert("Missing student LRN. Please log in again.");
       window.location.href = "login.html";
@@ -145,14 +149,19 @@
 
     async function loadDashboard() {
       try {
+        console.log('Loading dashboard for LRN:', lrn);
+        
         // Use relative API path
         const res = await fetch(`../api/student-modules.php?lrn=${lrn}`);
+        
+        console.log('API Response status:', res.status);
         
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
         
         const data = await res.json();
+        console.log('API Response data:', data);
         
         if (!data.success) {
           alert(data.message || "Failed to load data.");
@@ -162,6 +171,10 @@
         const student = data.data.student;
         const modules = data.data.modules;
         const adviser = data.data.adviser;
+        
+        console.log('Student data:', student);
+        console.log('Modules data:', modules);
+        console.log('Adviser data:', adviser);
         
         if (!student) {
           alert("Student not found.");
@@ -173,6 +186,8 @@
         document.getElementById("studentLRN").textContent = lrn;
         document.getElementById("studentSection").textContent = student.section || '-';
         document.getElementById("studentAdviser").textContent = adviser ? adviser.name : '-';
+        
+        console.log('Updated header elements');
 
         // Parse progress
         let progress = {};

@@ -19,6 +19,11 @@
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
     .table-row:hover { background-color: #f8fafc; }
     .module-card { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #0ea5e9; }
+    .score-excellent { color: #059669; font-weight: 600; }
+    .score-good { color: #d97706; font-weight: 600; }
+    .score-needs-improvement { color: #dc2626; font-weight: 600; }
+    .summary-card { transition: transform 0.2s ease-in-out; }
+    .summary-card:hover { transform: translateY(-1px); }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -130,6 +135,10 @@
           <button onclick="openSectionsTaughtManagement()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2 hover-lift">
             <span>📚</span>
             <span>Manage Sections Taught</span>
+          </button>
+          <button onclick="openStudentScoresModal()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2 hover-lift">
+            <span>📊</span>
+            <span>View Student Scores</span>
           </button>
         </div>
       </div>
@@ -270,6 +279,112 @@
               Add Selected Section
             </button>
             <p class="text-sm text-gray-500 mt-2">These sections will be available when creating modules</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Scores Modal -->
+    <div id="studentScoresModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-900 flex items-center space-x-2">
+              <span>📊</span>
+              <span>Student Scores by Subject & Section</span>
+            </h3>
+            <button onclick="closeStudentScoresModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+          </div>
+
+          <!-- Filter Section -->
+          <div class="bg-gray-50 rounded-lg p-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Subject Filter</label>
+                <select id="scoreSubjectFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                  <option value="">All Subjects</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Section Filter</label>
+                <select id="scoreSectionFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                  <option value="">All Sections</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Quarter Filter</label>
+                <select id="scoreQuarterFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                  <option value="">All Quarters</option>
+                  <option value="1">1st Quarter</option>
+                  <option value="2">2nd Quarter</option>
+                  <option value="3">3rd Quarter</option>
+                  <option value="4">4th Quarter</option>
+                </select>
+              </div>
+            </div>
+            <div class="flex justify-between items-center mt-4">
+              <button onclick="applyScoreFilters()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                Apply Filters
+              </button>
+              <button onclick="downloadConsolidatedGrades()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                <span>📥</span>
+                <span>Download Consolidated Grades</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Summary Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 summary-card">
+              <div class="text-blue-600 text-sm font-medium">Total Students</div>
+              <div id="totalStudentsCount" class="text-2xl font-bold text-blue-900">0</div>
+            </div>
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 summary-card">
+              <div class="text-green-600 text-sm font-medium">Average Score</div>
+              <div id="averageScore" class="text-2xl font-bold text-green-900">0%</div>
+            </div>
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 summary-card">
+              <div class="text-yellow-600 text-sm font-medium">Completed Modules</div>
+              <div id="completedModules" class="text-2xl font-bold text-yellow-900">0</div>
+            </div>
+            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 summary-card">
+              <div class="text-purple-600 text-sm font-medium">Active Subjects</div>
+              <div id="activeSubjects" class="text-2xl font-bold text-purple-900">0</div>
+            </div>
+          </div>
+
+          <!-- Scores Table -->
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Section</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Module</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quarter</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Completed</th>
+                </tr>
+              </thead>
+              <tbody id="scoresTableBody" class="bg-white divide-y divide-gray-200">
+                <!-- Scores will be populated here -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Loading State -->
+          <div id="scoresLoading" class="hidden text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+            <p class="mt-2 text-gray-600">Loading student scores...</p>
+          </div>
+
+          <!-- Empty State -->
+          <div id="scoresEmpty" class="hidden text-center py-12">
+            <div class="text-gray-400 text-6xl mb-4">📊</div>
+            <p class="text-gray-600 text-lg">No scores found for the selected filters</p>
+            <p class="text-gray-500 text-sm mt-2">Try adjusting your filter criteria</p>
           </div>
         </div>
       </div>
@@ -593,9 +708,11 @@
           <div class="flex justify-between items-center">
             <div class="flex-1">
               <h3 class="font-semibold text-gray-900 mb-1">${mod.title || mod.filename}</h3>
-              <p class="text-sm text-gray-600">${mod.quarter ? `Quarter: ${mod.quarter}` : ''}</p>
+              <p class="text-sm text-gray-600 mb-1">${mod.quarter ? `Quarter: ${mod.quarter}` : ''}</p>
+              <p class="text-sm text-blue-600 mb-2">📚 Sections: ${mod.section || 'No sections specified'}</p>
               <div class="flex items-center space-x-4 mt-2">
                 <span class="text-xs text-gray-500">📅 Created: ${mod.created_at ? mod.created_at.split('T')[0] : ''}</span>
+                <span class="text-xs text-gray-500">📊 Passing Score: ${mod.passing_score || 75}%</span>
               </div>
             </div>
             <div class="flex space-x-2 ml-4">
@@ -642,13 +759,26 @@
 
     async function deleteModule(id) {
       if (!confirm("Are you sure you want to delete this module?")) return;
-      const res = await fetch(`/api/delete-module/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (data.success) {
-        alert("✅ Module deleted.");
-        loadModules();
-      } else {
-        alert("❌ Delete failed.");
+      
+      try {
+        const res = await fetch(`/tms/remediation-web/api/delete-module.php?id=${id}`, { 
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ id: id })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          alert("✅ Module deleted successfully.");
+          loadModules(); // Refresh the modules list
+        } else {
+          alert("❌ Delete failed: " + (data.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Delete module error:', error);
+        alert("❌ Server error while deleting module.");
       }
     }
 
@@ -1189,6 +1319,256 @@
 
     function refreshAssignedTeachers() {
       loadAssignedTeachersOnDashboard();
+    }
+
+    // Student Scores Modal Functions
+    let studentScoresData = [];
+    let filteredScoresData = [];
+
+    function openStudentScoresModal() {
+      document.getElementById('studentScoresModal').classList.remove('hidden');
+      loadStudentScores();
+    }
+
+    function closeStudentScoresModal() {
+      document.getElementById('studentScoresModal').classList.add('hidden');
+    }
+
+    async function loadStudentScores() {
+      const scoresLoading = document.getElementById('scoresLoading');
+      const scoresEmpty = document.getElementById('scoresEmpty');
+      const scoresTableBody = document.getElementById('scoresTableBody');
+      
+      // Show loading state
+      scoresLoading.classList.remove('hidden');
+      scoresEmpty.classList.add('hidden');
+      scoresTableBody.innerHTML = '';
+
+      try {
+        const teacher = JSON.parse(localStorage.getItem('teacherUser'));
+        console.log('Teacher data:', teacher);
+        
+        // Fetch student progress data with scores
+        const apiUrl = `/tms/remediation-web/api/student-progress-scores.php?teacher_id=${teacher.id}`;
+        console.log('API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl);
+        console.log('Response status:', response.status);
+        
+        const result = await response.json();
+        console.log('API result:', result);
+        console.log('Result success:', result.success);
+        console.log('Result data length:', result.data ? result.data.length : 'undefined');
+        console.log('Result debug info:', result.debug);
+        console.log('Result error:', result.error);
+
+        scoresLoading.classList.add('hidden');
+
+        if (result.success && result.data && result.data.length > 0) {
+          studentScoresData = result.data;
+          filteredScoresData = [...studentScoresData];
+          console.log('Student scores data:', studentScoresData);
+          populateScoreFilters();
+          renderScoresTable();
+          updateScoresSummary();
+        } else {
+          console.log('No data found or API error:', result);
+          studentScoresData = [];
+          filteredScoresData = [];
+          populateScoreFilters();
+          scoresEmpty.classList.remove('hidden');
+          updateScoresSummary();
+        }
+      } catch (error) {
+        console.error('Error loading student scores:', error);
+        scoresLoading.classList.add('hidden');
+        scoresEmpty.classList.remove('hidden');
+        alert('❌ Failed to load student scores: ' + error.message);
+      }
+    }
+
+    function populateScoreFilters() {
+      const subjectFilter = document.getElementById('scoreSubjectFilter');
+      const sectionFilter = document.getElementById('scoreSectionFilter');
+      
+      // Get unique subjects and sections from the loaded data
+      if (studentScoresData && studentScoresData.length > 0) {
+        const subjects = [...new Set(studentScoresData.map(item => item.subject).filter(Boolean))];
+        const sections = [...new Set(studentScoresData.map(item => item.section).filter(Boolean))];
+        
+        // Populate subject filter
+        subjectFilter.innerHTML = '<option value="">All Subjects</option>';
+        subjects.forEach(subject => {
+          const option = document.createElement('option');
+          option.value = subject;
+          option.textContent = subject;
+          subjectFilter.appendChild(option);
+        });
+        
+        // Populate section filter
+        sectionFilter.innerHTML = '<option value="">All Sections</option>';
+        sections.forEach(section => {
+          const option = document.createElement('option');
+          option.value = section;
+          option.textContent = section;
+          sectionFilter.appendChild(option);
+        });
+      } else {
+        // If no data, use fallback from allStudents if available
+        subjectFilter.innerHTML = '<option value="">All Subjects</option>';
+        sectionFilter.innerHTML = '<option value="">All Sections</option>';
+        
+        // Try to get sections from allStudents if it exists
+        if (typeof allStudents !== 'undefined' && allStudents.length > 0) {
+          const sections = [...new Set(allStudents.map(student => student.section).filter(Boolean))];
+          sections.forEach(section => {
+            const option = document.createElement('option');
+            option.value = section;
+            option.textContent = section;
+            sectionFilter.appendChild(option);
+          });
+        }
+      }
+    }
+
+    function applyScoreFilters() {
+      const subjectFilter = document.getElementById('scoreSubjectFilter').value;
+      const sectionFilter = document.getElementById('scoreSectionFilter').value;
+      const quarterFilter = document.getElementById('scoreQuarterFilter').value;
+      
+      filteredScoresData = studentScoresData.filter(score => {
+        const matchesSubject = !subjectFilter || score.subject === subjectFilter;
+        const matchesSection = !sectionFilter || score.section === sectionFilter;
+        const matchesQuarter = !quarterFilter || score.quarter === quarterFilter;
+        
+        return matchesSubject && matchesSection && matchesQuarter;
+      });
+      
+      renderScoresTable();
+      updateScoresSummary();
+    }
+
+    function renderScoresTable() {
+      const scoresTableBody = document.getElementById('scoresTableBody');
+      const scoresEmpty = document.getElementById('scoresEmpty');
+      
+      if (filteredScoresData.length === 0) {
+        scoresTableBody.innerHTML = '';
+        scoresEmpty.classList.remove('hidden');
+        return;
+      }
+      
+      scoresEmpty.classList.add('hidden');
+      
+      scoresTableBody.innerHTML = filteredScoresData.map(score => {
+        const statusClass = score.completed ? 'status-complete' : 'status-pending';
+        const statusText = score.completed ? 'Completed' : 'Pending';
+        const scoreDisplay = score.score !== null ? `${score.score}%` : '-';
+        const dateCompleted = score.completed_at ? new Date(score.completed_at).toLocaleDateString() : '-';
+        
+        return `
+          <tr class="table-row">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div>
+                <div class="text-sm font-medium text-gray-900">${score.firstName} ${score.lastName}</div>
+                <div class="text-sm text-gray-500">LRN: ${score.lrn}</div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${score.section}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${score.subject}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">${score.title}</div>
+              <div class="text-xs text-gray-500">${score.lesson}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${score.quarter}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="text-lg font-semibold ${score.score >= 85 ? 'score-excellent' : score.score >= 75 ? 'score-good' : 'score-needs-improvement'}">${scoreDisplay}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="status-badge ${statusClass}">${statusText}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${dateCompleted}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateScoresSummary() {
+      const totalStudents = new Set(filteredScoresData.map(score => score.student_id)).size;
+      const completedScores = filteredScoresData.filter(score => score.completed && score.score !== null);
+      const averageScore = completedScores.length > 0 ? 
+        Math.round(completedScores.reduce((sum, score) => sum + score.score, 0) / completedScores.length) : 0;
+      const completedModules = completedScores.length;
+      const activeSubjects = new Set(filteredScoresData.map(score => score.subject)).size;
+      
+      document.getElementById('totalStudentsCount').textContent = totalStudents;
+      document.getElementById('averageScore').textContent = `${averageScore}%`;
+      document.getElementById('completedModules').textContent = completedModules;
+      document.getElementById('activeSubjects').textContent = activeSubjects;
+    }
+
+    function downloadConsolidatedGrades() {
+      if (filteredScoresData.length === 0) {
+        alert('No data to download. Please ensure there are students with scores.');
+        return;
+      }
+      
+      // Prepare CSV data
+      const csvHeaders = [
+        'Student Name',
+        'LRN',
+        'Section',
+        'Subject',
+        'Module Title',
+        'Lesson',
+        'Quarter',
+        'Score (%)',
+        'Status',
+        'Date Completed'
+      ];
+      
+      const csvRows = filteredScoresData.map(score => [
+        `"${score.firstName} ${score.lastName}"`,
+        score.lrn,
+        score.section,
+        `"${score.subject}"`,
+        `"${score.title}"`,
+        `"${score.lesson}"`,
+        score.quarter,
+        score.score !== null ? score.score : '',
+        score.completed ? 'Completed' : 'Pending',
+        score.completed_at ? new Date(score.completed_at).toLocaleDateString() : ''
+      ]);
+      
+      // Create CSV content
+      const csvContent = [csvHeaders.join(','), ...csvRows.map(row => row.join(','))].join('\n');
+      
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      
+      // Generate filename with current date and filters
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const subjectFilter = document.getElementById('scoreSubjectFilter').value;
+      const sectionFilter = document.getElementById('scoreSectionFilter').value;
+      const quarterFilter = document.getElementById('scoreQuarterFilter').value;
+      
+      let filename = `student_grades_${dateStr}`;
+      if (subjectFilter) filename += `_${subjectFilter.replace(/\s+/g, '_')}`;
+      if (sectionFilter) filename += `_${sectionFilter}`;
+      if (quarterFilter) filename += `_Q${quarterFilter}`;
+      filename += '.csv';
+      
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert(`✅ Consolidated grades downloaded as ${filename}`);
     }
 
     const teacherData = checkTeacherAuth();

@@ -10,7 +10,9 @@ SecurityMiddleware::checkUploadSecurity();
 header('Content-Type: application/json');
 
 // Check teacher authentication
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 if (!isset($_SESSION['teacher_logged_in']) || !$_SESSION['teacher_logged_in'] || !isset($_SESSION['teacher_id'])) {
     jsonResponse(false, 'Teacher authentication required', null, 401);
 }
@@ -67,25 +69,11 @@ try {
     $db = new Database();
     $pdo = $db->getConnection();
     
-    // Get teacher's information to find their admin_id
-    $stmt = $pdo->prepare("SELECT username FROM teachers WHERE id = ?");
-    $stmt->execute([$teacherId]);
-    $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$teacher) {
-        jsonResponse(false, 'Teacher not found');
+    // Check if modules table has teacher_id column, if not add it
+    $stmt = $pdo->query("SHOW COLUMNS FROM modules LIKE 'teacher_id'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE modules ADD COLUMN teacher_id INT");
     }
-    
-    // Find the corresponding admin_id for this teacher
-    $stmt = $pdo->prepare("SELECT id FROM admins WHERE username = ?");
-    $stmt->execute([$teacher['username']]);
-    $admin = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$admin) {
-        jsonResponse(false, 'Teacher admin record not found');
-    }
-    
-    $adminId = $admin['id'];
     
     // Check if modules table has new columns, if not add them
     $stmt = $pdo->query("SHOW COLUMNS FROM modules LIKE 'title'");
@@ -98,26 +86,24 @@ try {
                    ADD COLUMN passing_score INT DEFAULT 75 AFTER section");
     }
     
-    // Start transaction to ensure all sections are created or none
+    // Start transaction to ensure module is created properly
     $pdo->beginTransaction();
     
-    $stmt = $pdo->prepare("INSERT INTO modules (title, description, section, passing_score, quarter, filename, questions, admin_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    // Create single module with all sections stored as comma-separated string
+    $sectionsString = implode(', ', $sections);
+    $stmt = $pdo->prepare("INSERT INTO modules (title, description, section, passing_score, quarter, filename, questions, teacher_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     
-    // Create module for each selected section
-    $createdModules = [];
-    foreach ($sections as $section) {
-        $section = sanitizeInput($section);
-        $stmt->execute([$title, $description, $section, $passingScore, 'Q1', $filename, $questions, $adminId]);
-        $createdModules[] = [
-            'id' => $pdo->lastInsertId(),
-            'section' => $section
-        ];
-    }
+    $stmt->execute([$title, $description, $sectionsString, $passingScore, 'Q1', $filename, $questions, $teacherId]);
+    $moduleId = $pdo->lastInsertId();
     
     $pdo->commit();
     
     $sectionsText = implode(', ', $sections);
-    jsonResponse(true, "Module created successfully for sections: {$sectionsText}", $createdModules);
+    jsonResponse(true, "Module created successfully for sections: {$sectionsText}", [
+        'id' => $moduleId,
+        'sections' => $sections,
+        'sectionsString' => $sectionsString
+    ]);
     
 } catch (PDOException $e) {
     $pdo->rollBack();

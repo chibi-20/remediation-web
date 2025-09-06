@@ -42,7 +42,7 @@ try {
     
     // Approach 1: Get teachers assigned to this student's section via teacher_sections
     $stmt = $pdo->prepare("
-        SELECT DISTINCT ts.admin_id 
+        SELECT DISTINCT ts.teacher_id 
         FROM teacher_sections ts 
         WHERE ts.section = ?
     ");
@@ -52,19 +52,12 @@ try {
     
     // Approach 2: Include the student's direct teacher_id
     if ($student['teacher_id']) {
-        // Find the admin_id that corresponds to this teacher_id
-        $stmt = $pdo->prepare("SELECT id FROM admins WHERE username = (SELECT username FROM teachers WHERE id = ?)");
-        $stmt->execute([$student['teacher_id']]);
-        $teacherAdminId = $stmt->fetchColumn();
-        
-        if ($teacherAdminId) {
-            $allTeacherIds[] = $teacherAdminId;
-        }
+        $allTeacherIds[] = $student['teacher_id'];
     }
     
     // Approach 3: Get all teachers who have created modules for this section (direct section match)
     $stmt = $pdo->prepare("
-        SELECT DISTINCT admin_id FROM modules 
+        SELECT DISTINCT teacher_id FROM modules 
         WHERE section = ? OR section = ? OR section LIKE ? OR section LIKE ?
     ");
     $sectionVariations = [
@@ -97,10 +90,10 @@ try {
     // Get modules from ALL teachers assigned to this section (flexible section matching)
     $placeholders = str_repeat('?,', count($teacherIds) - 1) . '?';
     $stmt = $pdo->prepare("
-        SELECT m.*, a.name as teacher_name 
+        SELECT m.*, t.name as teacher_name 
         FROM modules m 
-        JOIN admins a ON m.admin_id = a.id 
-        WHERE m.admin_id IN ($placeholders) 
+        JOIN teachers t ON m.teacher_id = t.id 
+        WHERE m.teacher_id IN ($placeholders) 
         AND (m.section = ? OR m.section = ? OR m.section LIKE ? OR m.section LIKE ?)
         ORDER BY m.quarter, m.id
     ");

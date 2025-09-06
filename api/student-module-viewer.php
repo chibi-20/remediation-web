@@ -33,9 +33,9 @@ try {
     
     // Get module details
     $stmt = $pdo->prepare("
-        SELECT m.*, a.name as teacher_name 
+        SELECT m.*, t.name as teacher_name 
         FROM modules m 
-        JOIN admins a ON m.admin_id = a.id 
+        JOIN teachers t ON m.teacher_id = t.id 
         WHERE m.id = ?
     ");
     $stmt->execute([$moduleId]);
