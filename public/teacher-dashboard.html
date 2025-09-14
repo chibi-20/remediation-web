@@ -777,7 +777,6 @@
           alert("❌ Delete failed: " + (data.error || 'Unknown error'));
         }
       } catch (error) {
-        console.error('Delete module error:', error);
         alert("❌ Server error while deleting module.");
       }
     }
@@ -1346,33 +1345,22 @@
 
       try {
         const teacher = JSON.parse(localStorage.getItem('teacherUser'));
-        console.log('Teacher data:', teacher);
         
         // Fetch student progress data with scores
         const apiUrl = `/tms/remediation-web/api/student-progress-scores.php?teacher_id=${teacher.id}`;
-        console.log('API URL:', apiUrl);
         
         const response = await fetch(apiUrl);
-        console.log('Response status:', response.status);
-        
         const result = await response.json();
-        console.log('API result:', result);
-        console.log('Result success:', result.success);
-        console.log('Result data length:', result.data ? result.data.length : 'undefined');
-        console.log('Result debug info:', result.debug);
-        console.log('Result error:', result.error);
 
         scoresLoading.classList.add('hidden');
 
         if (result.success && result.data && result.data.length > 0) {
           studentScoresData = result.data;
           filteredScoresData = [...studentScoresData];
-          console.log('Student scores data:', studentScoresData);
           populateScoreFilters();
           renderScoresTable();
           updateScoresSummary();
         } else {
-          console.log('No data found or API error:', result);
           studentScoresData = [];
           filteredScoresData = [];
           populateScoreFilters();
@@ -1380,7 +1368,6 @@
           updateScoresSummary();
         }
       } catch (error) {
-        console.error('Error loading student scores:', error);
         scoresLoading.classList.add('hidden');
         scoresEmpty.classList.remove('hidden');
         alert('❌ Failed to load student scores: ' + error.message);

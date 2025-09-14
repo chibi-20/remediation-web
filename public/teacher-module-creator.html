@@ -322,7 +322,6 @@
         const teacher = JSON.parse(teacherUser);
         return teacher;
       } catch (error) {
-        console.error('Error parsing teacher data:', error);
         localStorage.removeItem("teacherLoggedIn");
         localStorage.removeItem("teacherToken");
         localStorage.removeItem("teacherUser");
@@ -596,8 +595,6 @@
             result = JSON.parse(responseText);
           }
         } catch (parseError) {
-          console.error('Response parsing error:', parseError);
-          console.error('Full response:', responseText);
           throw new Error('Invalid response format');
         }
         
@@ -608,7 +605,6 @@
           errorDiv.textContent = '❌ ' + (result.error || 'Failed to create module');
         }
       } catch (err) {
-        console.error('Module creation error:', err);
         errorDiv.textContent = '❌ Server error. Please try again.';
       }
     });

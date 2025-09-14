@@ -215,10 +215,6 @@
     const moduleId = urlParams.get('id');
     const studentLRN = localStorage.getItem('studentLRN'); // Fixed: was 'student_lrn'
 
-    // Debug information
-
-    console.log('- All localStorage keys:', Object.keys(localStorage));
-
     if (!moduleId) {
       alert('Module ID is required');
       window.location.href = 'dashboard.html';

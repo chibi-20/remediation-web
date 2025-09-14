@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -187,7 +187,6 @@
                     document.getElementById('uploadRejections').textContent = data.stats.upload_rejections || 0;
                     document.getElementById('activeSessions').textContent = data.stats.active_sessions || 0;
                 } else {
-                    console.error('API Error:', data.error || 'Unknown error');
                     showError('Failed to load security statistics: ' + (data.error || 'Unknown error'));
                     // Set fallback values
                     document.getElementById('failedLogins').textContent = '0';
@@ -196,7 +195,6 @@
                     document.getElementById('activeSessions').textContent = '0';
                 }
             } catch (error) {
-                console.error('Error loading security stats:', error);
                 showError('Failed to connect to security API: ' + error.message);
                 // Set fallback values
                 document.getElementById('failedLogins').textContent = '0';
@@ -220,14 +218,14 @@
                     updateFailedLoginsList(data.failed_logins || []);
                     updateRateLimitsList(data.rate_limits || []);
                 } else {
-                    console.error('API Error:', data.error || 'Unknown error');
+
                     showError('Failed to load security events: ' + (data.error || 'Unknown error'));
                     // Set fallback empty states
                     updateFailedLoginsList([]);
                     updateRateLimitsList([]);
                 }
             } catch (error) {
-                console.error('Error loading security events:', error);
+
                 showError('Failed to connect to security events API: ' + error.message);
                 // Set fallback empty states
                 updateFailedLoginsList([]);
@@ -353,7 +351,7 @@
                     showError('Error: ' + data.error);
                 }
             } catch (error) {
-                console.error('Error adding IP to blacklist:', error);
+
                 showError('Error adding IP to blacklist');
             }
         }
@@ -381,7 +379,7 @@
                         showError('Error: ' + data.error);
                     }
                 } catch (error) {
-                    console.error('Error blocking IP:', error);
+
                     showError('Error blocking IP address');
                 }
             }
@@ -414,13 +412,13 @@
                         `).join('');
                     }
                 } else {
-                    console.error('API Error:', data.error || 'Unknown error');
+
                     showError('Failed to load blacklisted IPs: ' + (data.error || 'Unknown error'));
                     const container = document.getElementById('blacklistedIPs');
                     container.innerHTML = '<p class="text-red-500">Error loading blacklist</p>';
                 }
             } catch (error) {
-                console.error('Error loading blacklist:', error);
+
                 showError('Failed to connect to blacklist API: ' + error.message);
                 const container = document.getElementById('blacklistedIPs');
                 container.innerHTML = '<p class="text-red-500">Error loading blacklist</p>';
@@ -450,7 +448,7 @@
                         showError('Error: ' + data.error);
                     }
                 } catch (error) {
-                    console.error('Error removing IP from blacklist:', error);
+
                     showError('Error removing IP from blacklist');
                 }
             }

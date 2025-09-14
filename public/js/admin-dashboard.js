@@ -30,7 +30,6 @@ async function loadDashboardData() {
         await loadTeachers();
         await loadStudents();
     } catch (error) {
-        console.error('Error loading dashboard data:', error);
         // Show user-friendly error message
         showNotification('Error loading dashboard data. Please refresh the page.', 'error');
     }
@@ -135,12 +134,10 @@ async function loadStudents() {
                 studentsList.appendChild(studentDiv);
             });
         } else {
-            console.error('API Error:', data.message);
             const studentsList = document.getElementById('studentsList');
             studentsList.innerHTML = '<p class="text-red-500 text-center py-4">Error loading students: ' + (data.message || 'Unknown error') + '</p>';
         }
     } catch (error) {
-        console.error('Error loading students:', error);
         const studentsList = document.getElementById('studentsList');
         studentsList.innerHTML = '<p class="text-red-500 text-center py-4">Error connecting to server. Please try again.</p>';
     }

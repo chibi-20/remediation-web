@@ -197,7 +197,6 @@
         populateForm();
         
       } catch (error) {
-        console.error('Error loading module:', error);
         alert('Error loading module: ' + error.message);
         window.location.href = 'teacher-dashboard.html';
       } finally {
@@ -406,7 +405,6 @@
         }
         
       } catch (error) {
-        console.error('Error updating module:', error);
         alert('❌ Error: ' + error.message);
       } finally {
         // Re-enable submit button
