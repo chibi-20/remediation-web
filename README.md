@@ -278,6 +278,20 @@ The system supports subject teachers accessing students from multiple sections:
 - **Advisory Relationship**: Teachers see their own class students
 - **Subject Teaching**: Teachers see students from sections they teach
 - **Example**: ROSEMARIE (English teacher) can see LEGASPI (advisory) + LEYNES (subject teaching) students
+
+### 👤 **DEFAULT ADMIN ACCOUNTS:**
+```sql
+-- Default Administrator Accounts (For Initial Setup)
+INSERT INTO admins (username, password, name) VALUES 
+('307909', '$2y$10$rHMbsNRdExyG8hapTzWvkOgSFCmf70fTIRHpIvzoTR4pinUJkqeMi', 'System Administrator');
+```
+
+**Login Credentials:**
+- **Username:** `307909`
+- **Password:** `ilovebssaa`
+- **Password Hash:** `$2y$10$rHMbsNRdExyG8hapTzWvkOgSFCmf70fTIRHpIvzoTR4pinUJkqeMi`
+
+> **⚠️ SECURITY NOTE:** Change default passwords immediately after deployment. These credentials are for initial setup only.
     student_id INTEGER NOT NULL,
     module_id INTEGER NOT NULL,
     completed BOOLEAN DEFAULT FALSE,
