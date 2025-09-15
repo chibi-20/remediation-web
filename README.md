@@ -158,46 +158,126 @@ SYSTEM ARCHITECTURE:
 └── 📖 README.md                    # This documentation
 ```
 
-### 🗄️ **DATABASE SCHEMA:**
+### 🗄️ **DATABASE SCHEMA (MySQL):**
 ```sql
--- Admins Table (Teachers/Administrators)
-CREATE TABLE admins (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+-- Teachers Table (Primary Educators & Administrators)
+CREATE TABLE teachers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
+    name VARCHAR(100) NOT NULL,
     email VARCHAR(100),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    subject VARCHAR(100),                    -- Subject taught (e.g., ENGLISH, ARALING PANLIPUNAN)
+    grade VARCHAR(10),                       -- Grade level (e.g., 10, 11, 12)
+    advisory_section VARCHAR(50),            -- Section they advise (e.g., LEGASPI, LEYNES)
+    sections TEXT,                           -- Sections they teach as subject teacher
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Admins Table (System Administrators) 
+CREATE TABLE admins (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    name VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Students Table
 CREATE TABLE students (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    firstName VARCHAR(50) NOT NULL,
-    lastName VARCHAR(50) NOT NULL,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    adminId INTEGER NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (adminId) REFERENCES admins(id)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    firstName VARCHAR(255) NOT NULL,
+    lastName VARCHAR(255) NOT NULL,
+    section VARCHAR(255) NOT NULL,           -- Student's class section
+    lrn VARCHAR(12) UNIQUE NOT NULL,         -- Learner Reference Number
+    username VARCHAR(50),                    -- Login username (usually LRN)
+    password VARCHAR(255),                   -- Hashed password
+    name VARCHAR(255),                       -- Legacy field for compatibility
+    grade VARCHAR(10),                       -- Grade level
+    progress TEXT,                           -- JSON field storing assessment progress
+    teacher_id INT,                          -- Reference to class adviser (teachers table)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE SET NULL
 );
 
--- Modules Table
+-- Modules Table (Learning Materials & Assessments)
 CREATE TABLE modules (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title VARCHAR(255) NOT NULL,
-    lesson VARCHAR(255) NOT NULL,
-    quarter VARCHAR(20) NOT NULL,
-    fileName VARCHAR(255) NOT NULL,
-    filePath VARCHAR(500) NOT NULL,
-    assessment TEXT,
-    adminId INTEGER NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (adminId) REFERENCES admins(id)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,             -- Module title/name
+    description TEXT,                        -- Module description/lesson
+    section VARCHAR(100),                    -- Target section(s) - comma separated
+    grade VARCHAR(10),                       -- Grade level
+    passing_score INT DEFAULT 75,            -- Minimum score to pass
+    quarter VARCHAR(100) NOT NULL,           -- Academic quarter (Q1, Q2, Q3, Q4)
+    filename VARCHAR(255) NOT NULL,          -- PDF file name
+    questions TEXT,                          -- JSON array of assessment questions
+    teacher_id INT,                          -- Module creator (teachers table)
+    admin_id INT,                           -- Legacy field for compatibility
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
 );
 
--- Student Progress Table
-CREATE TABLE student_progress (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+-- Assessments Table (Individual Assessment Attempts)
+CREATE TABLE assessments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    module_id INT NOT NULL,
+    score DECIMAL(5,2),                      -- Score achieved
+    passed TINYINT(1) DEFAULT 0,             -- Whether student passed
+    answers LONGTEXT,                        -- JSON array of student answers
+    taken_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_attempt (student_id, module_id)  -- One attempt per student per module
+);
+
+-- Grade Levels Table (Academic Configuration)
+CREATE TABLE grade_levels (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    grade VARCHAR(10) UNIQUE NOT NULL,       -- Grade level identifier
+    name VARCHAR(100) NOT NULL,              -- Display name
+    sections TEXT,                           -- JSON array of sections
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Security Events Table (Security Monitoring)
+CREATE TABLE security_events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_type VARCHAR(50) NOT NULL,         -- Type of security event
+    ip_address VARCHAR(45),                  -- Client IP address
+    user_agent TEXT,                         -- Browser/client information
+    details TEXT,                            -- Event details (JSON)
+    severity ENUM('low', 'medium', 'high', 'critical') DEFAULT 'medium',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- IP Blacklist Table (Security Management)
+CREATE TABLE ip_blacklist (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ip_address VARCHAR(45) UNIQUE NOT NULL,
+    reason TEXT,                             -- Reason for blacklisting
+    blocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NULL,               -- NULL for permanent blocks
+    created_by VARCHAR(100)                  -- Admin who created the block
+);
+```
+
+### 📊 **DATABASE RELATIONSHIPS:**
+- **Students** belong to **Teachers** (class adviser relationship)
+- **Modules** are created by **Teachers** or **Admins**
+- **Assessments** link **Students** to **Modules** with scores
+- **Teachers** can teach multiple sections and advise one section
+- **Security Events** track system security incidents
+- **IP Blacklist** manages blocked IP addresses
+
+### 🔄 **CROSS-SECTION ACCESS:**
+The system supports subject teachers accessing students from multiple sections:
+- **Advisory Relationship**: Teachers see their own class students
+- **Subject Teaching**: Teachers see students from sections they teach
+- **Example**: ROSEMARIE (English teacher) can see LEGASPI (advisory) + LEYNES (subject teaching) students
     student_id INTEGER NOT NULL,
     module_id INTEGER NOT NULL,
     completed BOOLEAN DEFAULT FALSE,
