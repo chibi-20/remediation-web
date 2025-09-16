@@ -84,6 +84,18 @@ class Database {
                 FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
             )
         ");
+        
+        // Create grade_sections table
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS grade_sections (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                level INT NOT NULL,
+                section_name VARCHAR(50) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_level (level),
+                INDEX idx_section (level, section_name)
+            )
+        ");
     }
     
     public function getConnection() {

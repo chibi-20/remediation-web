@@ -1,10 +1,14 @@
 <?php
 require_once '../config.php';
+require_once '../security-middleware.php';
 
-header('Content-Type: application/json');
+// Apply API security checks
+SecurityMiddleware::checkAPISecurity();
+
+header('Content-Type: application/json; charset=utf-8');
 
 // Check admin authentication
-session_start();
+session_start(); // Use regular session_start() like admin-login.php
 if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
     jsonResponse(false, 'Admin authentication required');
 }

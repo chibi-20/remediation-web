@@ -1,5 +1,8 @@
 RewriteEngine On
 
+# Exclude API directory from rewriting
+RewriteCond %{REQUEST_URI} !^/api/
+
 # Redirect all requests to index.php if the file/directory doesn't exist
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
@@ -9,6 +12,10 @@ RewriteRule ^(.*)$ index.php [QSA,L]
 AddType application/javascript .js
 AddType text/css .css
 AddType application/pdf .pdf
+
+# Force UTF-8 encoding
+AddDefaultCharset utf-8
+AddCharset utf-8 .html .css .js .xml .json .rss .atom
 
 # Security headers
 Header always set X-Content-Type-Options nosniff

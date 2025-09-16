@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -57,22 +57,25 @@
             </div>
             
             <div class="text-center mt-6">
-                <h1 class="text-4xl font-bold text-gray-800 mb-2">ðŸŽ“ Grade Levels & Sections</h1>
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">🎓 Grade Levels & Sections</h1>
                 <p class="text-gray-600">Manage grade levels and their sections for teacher assignments</p>
             </div>
         </div>
+
         <!-- Grade Levels Container -->
         <div id="gradeLevelsContainer" class="space-y-6">
             <!-- Grade levels will be loaded here -->
         </div>
+
         <!-- Loading State -->
         <div id="loadingState" class="text-center py-12">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p class="text-gray-600">Loading grade levels...</p>
         </div>
+
         <!-- Empty State -->
         <div id="emptyState" class="hidden text-center py-12">
-            <div class="text-6xl mb-4">ðŸ“š</div>
+            <div class="text-6xl mb-4">📚</div>
             <h3 class="text-xl font-semibold text-gray-700 mb-2">No Grade Levels Yet</h3>
             <p class="text-gray-500 mb-6">Start by adding your first grade level to organize sections</p>
             <button onclick="showAddGradeModal()" class="add-section-btn text-white px-6 py-3 rounded-lg font-semibold shadow-lg">
@@ -80,11 +83,12 @@
             </button>
         </div>
     </div>
+
     <!-- Add Grade Level Modal -->
     <div id="addGradeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">ðŸŽ“ Add Grade Level</h3>
+                <h3 class="text-xl font-bold text-gray-800">🎓 Add Grade Level</h3>
                 <button onclick="closeAddGradeModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -117,11 +121,12 @@
             </form>
         </div>
     </div>
+
     <!-- Add Section Modal -->
     <div id="addSectionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">ðŸ“ Add Section</h3>
+                <h3 class="text-xl font-bold text-gray-800">📝 Add Section</h3>
                 <button onclick="closeAddSectionModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -150,8 +155,10 @@
             </form>
         </div>
     </div>
+
     <script>
         let gradeLevels = [];
+
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             loadGradeLevels();
@@ -161,10 +168,11 @@
             document.getElementById('addGradeForm').addEventListener('submit', handleAddGrade);
             document.getElementById('addSectionForm').addEventListener('submit', handleAddSection);
         });
+
         // Load grade levels and sections
         async function loadGradeLevels() {
             try {
-                const response = await fetch('/tms/remediation-web/api/grade-levels.php');
+                const response = await fetch('../api/grade-levels.php');
                 const data = await response.json();
                 
                 if (data.success) {
@@ -177,6 +185,7 @@
                 showEmptyState();
             }
         }
+
         // Render grade levels
         function renderGradeLevels() {
             const container = document.getElementById('gradeLevelsContainer');
@@ -196,7 +205,7 @@
             container.innerHTML = gradeLevels.map(grade => `
                 <div class="grade-card bg-white rounded-xl shadow-lg p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-2xl font-bold text-gray-800">ðŸ“š Grade ${grade.level}</h2>
+                        <h2 class="text-2xl font-bold text-gray-800">📚 Grade ${grade.level}</h2>
                         <div class="flex space-x-2">
                             <button onclick="showAddSectionModal(${grade.level})" class="add-section-btn text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md">
                                 <span class="flex items-center">
@@ -215,7 +224,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-3">ðŸ“‹ Sections (${grade.sections ? grade.sections.length : 0})</h3>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3">📋 Sections (${grade.sections ? grade.sections.length : 0})</h3>
                         <div class="min-h-[60px] bg-gray-50 rounded-lg p-4 border border-gray-200">
                             ${grade.sections && grade.sections.length > 0 ? 
                                 grade.sections.map(section => `
@@ -235,27 +244,33 @@
                 </div>
             `).join('');
         }
+
         // Show empty state
         function showEmptyState() {
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('emptyState').classList.remove('hidden');
         }
+
         // Modal functions
         function showAddGradeModal() {
             document.getElementById('addGradeModal').classList.remove('hidden');
         }
+
         function closeAddGradeModal() {
             document.getElementById('addGradeModal').classList.add('hidden');
             document.getElementById('addGradeForm').reset();
         }
+
         function showAddSectionModal(gradeLevel) {
             document.getElementById('sectionGradeLevel').value = gradeLevel;
             document.getElementById('addSectionModal').classList.remove('hidden');
         }
+
         function closeAddSectionModal() {
             document.getElementById('addSectionModal').classList.add('hidden');
             document.getElementById('addSectionForm').reset();
         }
+
         // Handle add grade
         async function handleAddGrade(e) {
             e.preventDefault();
@@ -264,7 +279,7 @@
             const gradeLevel = formData.get('gradeLevel') || document.getElementById('gradeLevel').value;
             
             try {
-                const response = await fetch('/tms/remediation-web/api/grade-levels.php', {
+                const response = await fetch('../api/grade-levels.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -288,6 +303,7 @@
                 showNotification('Error adding grade level', 'error');
             }
         }
+
         // Handle add section
         async function handleAddSection(e) {
             e.preventDefault();
@@ -296,7 +312,7 @@
             const sectionName = document.getElementById('sectionName').value.trim().toUpperCase();
             
             try {
-                const response = await fetch('/tms/remediation-web/api/grade-levels.php', {
+                const response = await fetch('../api/grade-levels.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -321,6 +337,7 @@
                 showNotification('Error adding section', 'error');
             }
         }
+
         // Delete grade level
         async function deleteGradeLevel(level) {
             if (!confirm(`Are you sure you want to delete Grade ${level} and all its sections?`)) {
@@ -328,7 +345,7 @@
             }
             
             try {
-                const response = await fetch('/tms/remediation-web/api/grade-levels.php', {
+                const response = await fetch('../api/grade-levels.php', {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -351,6 +368,7 @@
                 showNotification('Error deleting grade level', 'error');
             }
         }
+
         // Delete section
         async function deleteSection(level, sectionName) {
             if (!confirm(`Are you sure you want to delete section "${sectionName}" from Grade ${level}?`)) {
@@ -358,7 +376,7 @@
             }
             
             try {
-                const response = await fetch('/tms/remediation-web/api/grade-levels.php', {
+                const response = await fetch('../api/grade-levels.php', {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -382,6 +400,7 @@
                 showNotification('Error deleting section', 'error');
             }
         }
+
         // Show notification
         function showNotification(message, type = 'success') {
             const notification = document.createElement('div');
