@@ -49,21 +49,55 @@
     <div id="message" class="mt-4 text-center text-red-500"></div>
   </main>
   <script>
+    let csrfToken = '';
+
+    // Fetch CSRF token on page load
+    async function fetchCSRFToken() {
+      try {
+        const response = await fetch('/tms/remediation-web/api/get-csrf-token.php');
+        const data = await response.json();
+        if (data.success) {
+          csrfToken = data.csrf_token;
+        } else {
+          console.error('Failed to fetch CSRF token:', data.error);
+        }
+      } catch (error) {
+        console.error('Error fetching CSRF token:', error);
+      }
+    }
+
+    // Fetch CSRF token when page loads
+    fetchCSRFToken();
+
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const lrn = document.getElementById('lrn').value.trim();
       const password = document.getElementById('password').value;
       const msg = document.getElementById('message');
       msg.textContent = '';
+      
       if (!lrn || !password) {
         msg.textContent = 'Please enter both LRN and password.';
         return;
       }
+
+      // Ensure we have a CSRF token
+      if (!csrfToken) {
+        await fetchCSRFToken();
+      }
+
       try {
         const res = await fetch('/tms/remediation-web/api/student-login.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lrn, password })
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+          },
+          body: JSON.stringify({ 
+            lrn, 
+            password,
+            csrf_token: csrfToken
+          })
         });
         const result = await res.json();
         if (result.success) {
@@ -71,6 +105,11 @@
           window.location.href = "dashboard.html";
         } else {
           msg.textContent = result.error || "Login failed.";
+          
+          // If CSRF error, refresh token and retry
+          if (result.error && result.error.includes('CSRF')) {
+            await fetchCSRFToken();
+          }
         }
       } catch (err) {
         msg.textContent = "Server error. Please try again later.";

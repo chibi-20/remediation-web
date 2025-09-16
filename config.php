@@ -126,14 +126,22 @@ function validateRequired($fields, $data) {
 function startSession() {
     if (session_status() === PHP_SESSION_NONE) {
         // Configure session based on environment
-        if (SECURE_COOKIES) {
+        if (SECURE_COOKIES && isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
             ini_set('session.cookie_secure', 1);
             ini_set('session.cookie_httponly', 1);
             ini_set('session.cookie_samesite', 'Strict');
+        } else if (SECURE_COOKIES) {
+            // If SECURE_COOKIES is true but we're not on HTTPS, log a warning
+            error_log('Warning: SECURE_COOKIES enabled but HTTPS not detected');
+            ini_set('session.cookie_httponly', 1);
+            ini_set('session.cookie_samesite', 'Lax');
         }
         
         ini_set('session.gc_maxlifetime', SESSION_LIFETIME);
         ini_set('session.cookie_lifetime', SESSION_LIFETIME);
+        
+        // Set session name to something more specific
+        session_name('REMEDIATION_SESSION');
         
         session_start();
         

@@ -47,6 +47,26 @@
     </div>
 
     <script>
+        let csrfToken = '';
+
+        // Fetch CSRF token on page load
+        async function fetchCSRFToken() {
+            try {
+                const response = await fetch('../api/get-csrf-token.php');
+                const data = await response.json();
+                if (data.success) {
+                    csrfToken = data.csrf_token;
+                } else {
+                    console.error('Failed to fetch CSRF token:', data.error);
+                }
+            } catch (error) {
+                console.error('Error fetching CSRF token:', error);
+            }
+        }
+
+        // Fetch CSRF token when page loads
+        fetchCSRFToken();
+
         document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -54,15 +74,22 @@
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('error-message');
 
+            // Ensure we have a CSRF token
+            if (!csrfToken) {
+                await fetchCSRFToken();
+            }
+
             try {
                 const response = await fetch('../api/admin-login.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({
                         username: username,
-                        password: password
+                        password: password,
+                        csrf_token: csrfToken
                     })
                 });
 
@@ -73,8 +100,13 @@
                     localStorage.setItem('adminUser', JSON.stringify(data.data.admin));
                     window.location.href = "admin-dashboard.html";
                 } else {
-                    errorDiv.textContent = data.message || 'Login failed';
+                    errorDiv.textContent = data.message || data.error || 'Login failed';
                     errorDiv.classList.remove('hidden');
+                    
+                    // If CSRF error, refresh token and retry
+                    if (data.error && data.error.includes('CSRF')) {
+                        await fetchCSRFToken();
+                    }
                 }
             } catch (error) {
                 errorDiv.textContent = 'An error occurred during login';

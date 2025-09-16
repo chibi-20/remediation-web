@@ -57,17 +57,50 @@
     </div>
   </main>
   <script>
+    let csrfToken = '';
+
+    // Fetch CSRF token on page load
+    async function fetchCSRFToken() {
+      try {
+        const response = await fetch('/tms/remediation-web/api/get-csrf-token.php');
+        const data = await response.json();
+        if (data.success) {
+          csrfToken = data.csrf_token;
+        } else {
+          console.error('Failed to fetch CSRF token:', data.error);
+        }
+      } catch (error) {
+        console.error('Error fetching CSRF token:', error);
+      }
+    }
+
+    // Fetch CSRF token when page loads
+    fetchCSRFToken();
+
     document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value.trim();
       const errorDiv = document.getElementById("error");
       errorDiv.textContent = '';
+
+      // Ensure we have a CSRF token
+      if (!csrfToken) {
+        await fetchCSRFToken();
+      }
+
       try {
         const response = await fetch("/tms/remediation-web/api/teacher-login.php", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password }),
+          headers: { 
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": csrfToken
+          },
+          body: JSON.stringify({ 
+            username, 
+            password,
+            csrf_token: csrfToken
+          }),
         });
         const result = await response.json();
         if (result.success) {
@@ -77,6 +110,11 @@
           window.location.href = "teacher-dashboard.html";
         } else {
           errorDiv.textContent = "❌ " + (result.message || result.error);
+          
+          // If CSRF error, refresh token and retry
+          if ((result.message || result.error).includes('CSRF')) {
+            await fetchCSRFToken();
+          }
         }
       } catch (err) {
         errorDiv.textContent = "❌ Server error. Please try again.";

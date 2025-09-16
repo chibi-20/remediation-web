@@ -97,7 +97,7 @@ class SecurityMiddleware {
     /**
      * Set comprehensive security headers
      */
-    private static function setSecurityHeaders() {
+    public static function setSecurityHeaders() {
         // Prevent XSS attacks
         header('X-XSS-Protection: 1; mode=block');
         
@@ -142,11 +142,47 @@ class SecurityMiddleware {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
         
-        $submittedToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        // Get token from various sources
+        $submittedToken = $_POST['csrf_token'] ?? 
+                         $_SERVER['HTTP_X_CSRF_TOKEN'] ?? 
+                         ($_SERVER['HTTP_X_XSRF_TOKEN'] ?? '');
+        
+        // Also check JSON input for CSRF token
+        if (empty($submittedToken)) {
+            $input = json_decode(file_get_contents('php://input'), true);
+            if ($input && isset($input['csrf_token'])) {
+                $submittedToken = $input['csrf_token'];
+            }
+        }
+        
+        if (empty($submittedToken)) {
+            self::logSecurityEvent('csrf_token_missing', [
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+            ]);
+            
+            http_response_code(403);
+            echo json_encode([
+                'success' => false, 
+                'error' => 'CSRF token missing',
+                'debug' => EnvLoader::isDebugMode() ? 'Include csrf_token in request body or X-CSRF-TOKEN header' : null
+            ]);
+            exit;
+        }
         
         if (!hash_equals($_SESSION['csrf_token'], $submittedToken)) {
+            self::logSecurityEvent('csrf_token_mismatch', [
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+                'provided_token' => EnvLoader::isDebugMode() ? substr($submittedToken, 0, 8) . '...' : 'hidden'
+            ]);
+            
             http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'CSRF token mismatch']);
+            echo json_encode([
+                'success' => false, 
+                'error' => 'CSRF token invalid',
+                'debug' => EnvLoader::isDebugMode() ? 'Token mismatch - get new token from /api/get-csrf-token.php' : null
+            ]);
             exit;
         }
     }
