@@ -577,7 +577,7 @@
       formData.append('questions', JSON.stringify(questionsData));
       
       try {
-        const response = await fetch('/tms/remediation-web/api/teacher-create-module.php', {
+        const response = await fetch('../api/teacher-create-module.php', {
           method: 'POST',
           body: formData
         });

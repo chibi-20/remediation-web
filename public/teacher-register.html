@@ -89,7 +89,7 @@
     // Load available grade levels
     async function loadGradeLevels() {
       try {
-        const response = await fetch('/tms/remediation-web/api/grade-levels.php');
+        const response = await fetch('../api/grade-levels.php');
         const data = await response.json();
         
         if (data.success && Array.isArray(data.data)) {
@@ -170,7 +170,7 @@
       }
       
       try {
-        const response = await fetch("/tms/remediation-web/api/register-admin.php", {
+        const response = await fetch("../api/register-admin.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, grade, subject, advisory_section: advisorySection, username, password }),

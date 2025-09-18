@@ -78,7 +78,7 @@
 
     // Load grades when page loads
     document.addEventListener('DOMContentLoaded', function() {
-      fetch('/tms/remediation-web/api/public-grades.php')
+      fetch('../api/public-grades.php')
         .then(res => {
           if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
@@ -109,7 +109,7 @@
       teacherSelect.innerHTML = '<option value="">-- Select Teacher --</option>';
       
       if (selectedGrade) {
-        fetch(`/tms/remediation-web/api/teachers-by-grade.php?grade=${selectedGrade}`)
+        fetch(`../api/teachers-by-grade.php?grade=${selectedGrade}`)
           .then(res => {
             if (!res.ok) {
               throw new Error(`HTTP error! status: ${res.status}`);
@@ -175,7 +175,7 @@
       msg.textContent = '';
       
       try {
-        const res = await fetch('/tms/remediation-web/api/register-student.php', {
+        const res = await fetch('../api/register-student.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)

@@ -110,7 +110,7 @@
     // Load module and assessment data
     async function loadModuleAssessment() {
       try {
-        const response = await fetch(`/tms/remediation-web/api/get-module-assessment.php?id=${moduleId}&studentLRN=${studentLRN}`);
+        const response = await fetch(`../api/get-module-assessment.php?id=${moduleId}&studentLRN=${studentLRN}`);
         const result = await response.json();
 
         if (result.success) {
@@ -141,7 +141,7 @@
 
     function displayPDF() {
       const pdfViewer = document.getElementById('pdfViewer');
-      pdfViewer.src = `/tms/remediation-web/public/modules/${moduleData.filename}`;
+      pdfViewer.src = `modules/${moduleData.filename}`;
     }
 
     function displayQuestions() {
@@ -208,7 +208,7 @@
       }
 
       try {
-        const response = await fetch('/tms/remediation-web/api/take-assessment.php', {
+        const response = await fetch('../api/take-assessment.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

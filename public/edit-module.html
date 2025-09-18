@@ -186,7 +186,7 @@
     // Load existing module data
     async function loadModuleData() {
       try {
-        const response = await fetch(`/tms/remediation-web/api/get-module.php?id=${moduleId}`);
+        const response = await fetch(`../api/get-module.php?id=${moduleId}`);
         const result = await response.json();
         
         if (!result.success) {
@@ -390,7 +390,7 @@
         formData.append('questions', JSON.stringify(questionsData));
         
         // Submit to API
-        const response = await fetch('/tms/remediation-web/api/update-module.php', {
+        const response = await fetch('../api/update-module.php', {
           method: 'POST',
           body: formData
         });

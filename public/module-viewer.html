@@ -258,7 +258,7 @@
       }
 
       try {
-        const response = await fetch(`/tms/remediation-web/api/student-module-viewer.php?id=${moduleId}&lrn=${studentLRN}`);
+        const response = await fetch(`../api/student-module-viewer.php?id=${moduleId}&lrn=${studentLRN}`);
         const data = await response.json();
 
         if (data.success) {
@@ -295,7 +295,7 @@
       const openPdfBtn = document.getElementById('openPdfBtn');
       
       if (currentModule.filename) {
-        const directPdfUrl = `/tms/remediation-web/public/MODULES/${currentModule.filename}`;
+        const directPdfUrl = `MODULES/${currentModule.filename}`;
         
         pdfViewer.innerHTML = `
           <div class="flex items-center justify-center h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg">
@@ -442,7 +442,7 @@
       };
 
       try {
-        const response = await fetch('/tms/remediation-web/api/submit-assessment.php', {
+        const response = await fetch('../api/submit-assessment.php', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

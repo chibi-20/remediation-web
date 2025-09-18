@@ -62,7 +62,7 @@
     // Fetch CSRF token on page load
     async function fetchCSRFToken() {
       try {
-        const response = await fetch('/tms/remediation-web/api/get-csrf-token.php');
+        const response = await fetch('../api/get-csrf-token.php');
         const data = await response.json();
         if (data.success) {
           csrfToken = data.csrf_token;
@@ -90,7 +90,7 @@
       }
 
       try {
-        const response = await fetch("/tms/remediation-web/api/teacher-login.php", {
+        const response = await fetch("../api/teacher-login.php", {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",

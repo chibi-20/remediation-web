@@ -114,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
     formData.append("adminId", localStorage.getItem("adminId") || 1);
 
     try {
-      const response = await fetch("/tms/remediation-web/api/create-module.php", {
+      const response = await fetch("../api/create-module.php", {
         method: "POST",
         body: formData,
       });
