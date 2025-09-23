@@ -7,13 +7,22 @@ SecurityMiddleware::checkAPISecurity();
 
 header('Content-Type: application/json; charset=utf-8');
 
-// Check admin authentication
+// Start session
 session_start(); // Use regular session_start() like admin-login.php
-if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
-    jsonResponse(false, 'Admin authentication required');
-}
 
 $method = $_SERVER['REQUEST_METHOD'];
+
+// Check authentication based on method
+if ($method === 'GET') {
+    // For GET requests (reading grade levels), allow public access for registration
+    // This allows teacher registration page to load available grade levels
+    // No authentication required for reading grade levels
+} else {
+    // For POST/DELETE requests (modifying grade levels), require admin only
+    if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
+        jsonResponse(false, 'Admin authentication required');
+    }
+}
 
 try {
     $db = new Database();

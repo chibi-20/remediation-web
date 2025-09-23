@@ -52,6 +52,13 @@
         </select>
       </div>
       <div>
+        <label for="section" class="block text-sm font-medium text-gray-700 mb-1">Section</label>
+        <select id="section" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+          <option value="">-- Select Section --</option>
+        </select>
+        <p class="text-xs text-gray-500 mt-1">Sections are filtered by selected grade level</p>
+      </div>
+      <div>
         <label for="admin" class="block text-sm font-medium text-gray-700 mb-1">Teacher</label>
         <select id="admin" name="adminId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
           <option value="">-- Select Teacher --</option>
@@ -78,7 +85,7 @@
 
     // Load grades when page loads
     document.addEventListener('DOMContentLoaded', function() {
-      fetch('../api/public-grades.php')
+      fetch('../api/grade-levels.php')
         .then(res => {
           if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
@@ -87,28 +94,70 @@
         })
         .then(data => {
           const gradeSelect = document.getElementById('grade');
-          if (data && data.length > 0) {
-            data.forEach(gradeObj => {
+          if (data.success && data.data && data.data.length > 0) {
+            data.data.forEach(gradeObj => {
               const option = document.createElement('option');
-              option.value = gradeObj.grade;
-              option.textContent = `Grade ${gradeObj.grade}`;
+              option.value = gradeObj.level;
+              option.textContent = `Grade ${gradeObj.level}`;
               gradeSelect.appendChild(option);
             });
           } else {
+            // Fallback: add default grades if no data
+            const defaultGrades = [7, 8, 9, 10, 11, 12];
+            defaultGrades.forEach(grade => {
+              const option = document.createElement('option');
+              option.value = grade;
+              option.textContent = `Grade ${grade}`;
+              gradeSelect.appendChild(option);
+            });
           }
         })
         .catch(err => {
-          alert('Failed to load grade levels. Please refresh the page.');
+          console.error('Error loading grades:', err);
+          // Fallback: add default grades
+          const gradeSelect = document.getElementById('grade');
+          const defaultGrades = [7, 8, 9, 10, 11, 12];
+          defaultGrades.forEach(grade => {
+            const option = document.createElement('option');
+            option.value = grade;
+            option.textContent = `Grade ${grade}`;
+            gradeSelect.appendChild(option);
+          });
         });
     });
 
-    // Handle grade selection to load teachers
+    // Handle grade selection to load sections and teachers
     document.getElementById('grade').addEventListener('change', function() {
       const selectedGrade = this.value;
+      const sectionSelect = document.getElementById('section');
       const teacherSelect = document.getElementById('admin');
+      
+      // Reset sections and teachers
+      sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
       teacherSelect.innerHTML = '<option value="">-- Select Teacher --</option>';
       
       if (selectedGrade) {
+        // Load sections for the selected grade
+        fetch(`../api/grade-levels.php`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && data.data) {
+              const gradeData = data.data.find(g => g.level == selectedGrade);
+              if (gradeData && gradeData.sections) {
+                gradeData.sections.forEach(section => {
+                  const option = document.createElement('option');
+                  option.value = section.name;
+                  option.textContent = section.name;
+                  sectionSelect.appendChild(option);
+                });
+              }
+            }
+          })
+          .catch(err => {
+            console.error('Error loading sections:', err);
+          });
+
+        // Load teachers for the selected grade
         fetch(`../api/teachers-by-grade.php?grade=${selectedGrade}`)
           .then(res => {
             if (!res.ok) {
@@ -154,17 +203,12 @@
     document.getElementById('registerForm').addEventListener('submit', async function (e) {
       e.preventDefault();
       
-      // Get the selected teacher's advisory section
-      const selectedTeacherId = document.getElementById('admin').value;
-      const selectedTeacher = teachersData.find(t => t.id == selectedTeacherId);
-      const section = selectedTeacher ? selectedTeacher.advisory_section : '';
-      
       const data = {
         lastName: document.getElementById('lastName').value.trim(),
         firstName: document.getElementById('firstName').value.trim(),
         middleInitial: document.getElementById('middleInitial').value.trim(),
         grade: document.getElementById('grade').value.trim(),
-        section: section,
+        section: document.getElementById('section').value.trim(),
         lrn: document.getElementById('lrn').value.trim(),
         password: document.getElementById('password').value,
         adminId: document.getElementById('admin').value
@@ -185,7 +229,8 @@
           msg.textContent = '✅ ' + (result.message || 'Student registered successfully!');
           msg.className = 'success';
           document.getElementById('registerForm').reset();
-          // Reset teacher dropdown
+          // Reset section and teacher dropdowns
+          document.getElementById('section').innerHTML = '<option value="">-- Select Section --</option>';
           document.getElementById('admin').innerHTML = '<option value="">-- Select Teacher --</option>';
         } else {
           msg.textContent = '❌ ' + (result.message || 'Registration failed.');

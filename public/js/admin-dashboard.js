@@ -4,6 +4,12 @@ document.addEventListener('DOMContentLoaded', function() {
     loadDashboardData();
 });
 
+function logout() {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    window.location.href = 'index.html';
+}
+
 function checkAdminAuth() {
     const adminToken = localStorage.getItem('adminToken');
     const adminUser = localStorage.getItem('adminUser');
@@ -527,10 +533,4 @@ function openSecurityDashboard() {
             securityWindow.localStorage.setItem('adminUser', adminUser);
         }
     });
-}
-
-function logout() {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
-    window.location.href = 'index.html';
 }
